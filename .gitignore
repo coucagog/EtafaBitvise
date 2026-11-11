@@ -1,0 +1,30 @@
+# Compilation
+target/
+node_modules/
+dist/
+.gradle/
+.svelte-kit/
+*.apk
+*.aab
+*.deb
+*.AppImage
+dist-linux/
+*.log
+
+# Générés par Tauri, sauf gen/android qui contient notre code Kotlin et notre manifeste
+app/src-tauri/gen/schemas/
+
+# Propre à ce poste
+.claude/
+local.properties
+*.jks
+*.keystore
+keystore.properties
+key.properties
+.env
+.env.*
+
+# Essais locaux : inutiles à la CI, ils citent nos serveurs et nos comptes
+poc/
+journal-dev/
+Capture1.png

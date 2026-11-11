@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Écran Tunnels</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+  .note { color: var(--alerte); }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : écran Tunnels</h1>
+  <p class="sous">9 novembre 2026 · Windows 11, WebView2 · serveur : OpenSSH 10.0p2, Debian 13 (VM 102)</p>
+
+  <p class="bilan">Les tunnels local, distant et proxy dynamique fonctionnent contre un vrai serveur OpenSSH, depuis l'application elle-même.
+  Rien de cette étape n'a été exécuté sur Android, Linux ou macOS.</p>
+
+  <h2>Tests automatiques</h2>
+  <table>
+    <tr><th>Banc</th><th>Portée</th><th>Résultat</th></tr>
+    <tr><td><code>mc-core</code> unitaires</td><td>Dont négociations SOCKS5 et HTTP CONNECT, validation des règles</td><td class="ok">21 sur 21</td></tr>
+    <tr><td><code>tests/connexion.rs</code></td><td>Parcours de connexion et terminal</td><td class="ok">12 sur 12</td></tr>
+    <tr><td><code>tests/tunnels.rs</code></td><td>Serveur russh local : relais, compteurs, refus, canal non demandé</td><td class="ok">9 sur 9</td></tr>
+    <tr><td><code>tests/openssh_reel.rs</code></td><td>Vrai OpenSSH : terminal, SFTP, tunnels</td><td class="ok">4 sur 4</td></tr>
+    <tr><td>Front</td><td><code>svelte-check</code> et construction Vite</td><td class="ok">0 erreur</td></tr>
+  </table>
+
+  <h2>Contre le vrai serveur</h2>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Client vers serveur : bannière du sshd lue à travers le tunnel</td><td class="ok">Réussi</td></tr>
+    <tr><td>Proxy SOCKS5 avec nom d'hôte, puis HTTP CONNECT</td><td class="ok">Réussi</td></tr>
+    <tr><td>Destination refusée : erreur notée, session conservée</td><td class="ok">Réussi</td></tr>
+    <tr><td>Port privilégié 80 demandé par un compte ordinaire : refusé par le serveur</td><td class="ok">Réussi</td></tr>
+    <tr><td>Serveur vers client : 8 Mio transmis en 1,5 s, octets comptés à l'identique</td><td class="ok">Réussi</td></tr>
+    <tr><td>Port distant rendu à la fermeture, puis réutilisé aussitôt</td><td class="ok">Réussi</td></tr>
+    <tr><td>Serveur vers client en duplex, compteurs à l'octet près</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Parcours dans l'application</h2>
+  <table>
+    <tr><th>Action</th><th>Résultat</th></tr>
+    <tr><td><code>Ctrl+Shift+L</code> ouvre l'onglet Tunnels, état vide</td><td class="ok">Réussi</td></tr>
+    <tr><td>Champs vides refusés avant toute ouverture</td><td class="ok">Réussi</td></tr>
+    <tr><td>Tunnel local créé, traversé depuis ce poste</td><td class="ok">Réussi</td></tr>
+    <tr><td>Port déjà utilisé : message et Réessayer, qui aboutit une fois le port libre</td><td class="ok">Réussi</td></tr>
+    <tr><td>Écoute sur 0.0.0.0 signalée, puis « Limiter à 127.0.0.1 » appliqué en session</td><td class="ok">Réussi</td></tr>
+    <tr><td>Interrupteur : port réellement libéré</td><td class="ok">Réussi</td></tr>
+    <tr><td>Suppression : focus initial sur Annuler, puis confirmation</td><td class="ok">Réussi</td></tr>
+    <tr><td>Déconnexion et retour aux profils</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Limites</h2>
+  <ul>
+    <li>Non exécuté : Android, Linux, macOS, serveur Bitvise.</li>
+    <li class="note">Le volume de 8 Mio a été mesuré dans le sens serveur vers client seulement.</li>
+    <li class="note">Les proxys SOCKS5 et HTTP n'ont pas d'authentification : ils restent sur 127.0.0.1 par défaut, et l'écoute réseau est signalée.</li>
+    <li>Une connexion dont le client local consomme trop lentement est fermée au-delà de 64 Mio en attente, pour ne pas geler la session.</li>
+    <li>Absents tant qu'ils ne sont pas réalisés : pont FTP vers SFTP, journal de session.</li>
+  </ul>
+</main>
+</body>
+</html>

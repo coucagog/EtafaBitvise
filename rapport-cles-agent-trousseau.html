@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clés et trousseau</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+  .note { color: var(--alerte); }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : clés, agent SSH et trousseau</h1>
+  <p class="sous">9 novembre 2026 · Windows 11, WebView2 · serveur : OpenSSH 10.0p2, Debian 13 (VM 102)</p>
+
+  <p class="bilan">Les gestionnaires de clés client et d'hôte, l'authentification par agent et le trousseau de Windows fonctionnent depuis l'application, contre un vrai serveur OpenSSH.
+  Rien de cette étape n'a été exécuté sur Android, Linux ou macOS.</p>
+
+  <h2>Tests automatiques</h2>
+  <table>
+    <tr><th>Banc</th><th>Portée</th><th>Résultat</th></tr>
+    <tr><td><code>mc-core</code> unitaires</td><td>Dont magasin de clés, noms dangereux, hôtes connus</td><td class="ok">36 sur 36</td></tr>
+    <tr><td><code>tests/agent.rs</code></td><td>Agent vide, clé refusée, seconde identité, agent absent</td><td class="ok">1 sur 1</td></tr>
+    <tr><td><code>connexion</code>, <code>routes</code>, <code>tunnels</code></td><td>Bancs existants, rejoués</td><td class="ok">30 sur 30</td></tr>
+    <tr><td><code>tests/openssh_reel.rs</code></td><td>Vrai OpenSSH, dont agent. La saisie interactive, validée auparavant, n'a pas été rejouée : son <code>sshd</code> temporaire est retiré</td><td class="ok">8 exécutés, 1 ignoré</td></tr>
+    <tr><td>Front</td><td><code>svelte-check</code> et construction Vite</td><td class="ok">0 erreur</td></tr>
+  </table>
+
+  <h2>Dans l'application</h2>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Génération Ed25519 protégée, et RSA 4096 (36 s en compilation debug)</td><td class="ok">Réussi</td></tr>
+    <tr><td>Passphrases différentes bloquées ; nom existant jamais écrasé</td><td class="ok">Réussi</td></tr>
+    <tr><td>Import d'une clé OpenSSH ; second import refusé</td><td class="ok">Réussi</td></tr>
+    <tr><td>Clé choisie dans « Mes clés » ; clé générée et protégée acceptée par OpenSSH</td><td class="ok">Réussi</td></tr>
+    <tr><td>Hôtes connus : empreinte, recherche, oubli ; l'hôte oublié est de nouveau demandé</td><td class="ok">Réussi</td></tr>
+    <tr><td>Suppression d'une clé : profil concerné signalé, focus sur Annuler</td><td class="ok">Réussi</td></tr>
+    <tr><td>Connexion par agent, signature vérifiée par OpenSSH</td><td class="ok">Réussi</td></tr>
+    <tr><td>Trousseau : secret refusé jamais enregistré ; secret accepté enregistré ; connexion suivante sans saisie ; décocher efface</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Limites connues</h2>
+  <ul>
+    <li class="note">L'agent de l'essai graphique est un agent de test sur tube nommé. L'agent OpenSSH de Windows est désactivé sur ce poste et Pageant n'a pas été essayé.</li>
+    <li class="note">Export de la clé publique : vérifié par test unitaire ; la boîte d'enregistrement native n'a pas été pilotée. Import PEM et PKCS#8 : code présent, sans test dédié.</li>
+    <li class="note">Le trousseau n'existe pas sur Android dans cette version (case absente) ; l'agent non plus. Linux et macOS : non essayés.</li>
+    <li class="note">Clés privées sous Windows : le fichier hérite des droits du profil de l'utilisateur, sans restriction supplémentaire.</li>
+    <li class="note">Import <code>.ppk</code> : non pris en charge.</li>
+  </ul>
+</main>
+</body>
+</html>

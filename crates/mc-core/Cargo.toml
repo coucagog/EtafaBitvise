@@ -1,0 +1,30 @@
+[package]
+name = "mc-core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+russh = { workspace = true }
+russh-sftp = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+log = { workspace = true }
+rand = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+keyring = { version = "3", features = ["windows-native"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+keyring = { version = "3", features = ["async-secret-service", "tokio", "crypto-rust"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+ndk-context = "0.1"
+
+[dev-dependencies]
+futures = "0.3"

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "MLS Connect",
+  "mainBinaryName": "mls-connect",
+  "version": "../package.json",
+  "identifier": "app.mlsconnect.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5183",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "dragDropEnabled": false,
+        "title": "MLS Connect",
+        "width": 1280,
+        "height": 840,
+        "minWidth": 960,
+        "minHeight": 600,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "center": true,
+        "shadow": true,
+        "skipTaskbar": false,
+        "visible": true
+      }
+    ],
+    "security": {
+      "dangerousDisableAssetCspModification": ["style-src"],
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src ipc: http://ipc.localhost ws://localhost:5183"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "category": "Utility",
+    "shortDescription": "Client SSH",
+    "longDescription": "MLS Connect regroupe profils de connexion, terminal, transfert de fichiers SFTP et tunnels de ports.",
+    "publisher": "MLS Connect",
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true },
+      "wix": { "language": ["fr-FR", "en-US"], "upgradeCode": "7C1E0D52-3A64-4B8F-9E27-51D0A6F4C913" },
+      "nsis": { "displayLanguageSelector": false, "languages": ["French", "English"], "installMode": "currentUser", "compression": "lzma" }
+    }
+  }
+}

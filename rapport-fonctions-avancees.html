@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fonctions avancées</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
+  .tableau { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  .non { color: var(--alerte); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : fonctions avancées</h1>
+  <p class="sous">9 novembre 2026 · Windows 11, WebView2 · serveur : OpenSSH, Debian 13 (VM 102), à travers un tunnel SSH</p>
+
+  <p class="bilan">Le journal de session, les favoris et le miroir SFTP, l'import des clés PuTTY et la passerelle FTP sont en place. Tout a été vérifié sous Windows.
+  Rien de cette étape n'a été exécuté sur Android, Linux ou macOS : l'APK installé sur la tablette ne contient pas encore ces fonctions.</p>
+
+  <h2>Tests automatiques</h2>
+  <div class="tableau"><table>
+    <tr><th>Banc</th><th>Portée</th><th>Résultat</th></tr>
+    <tr><td><code>mc-core</code> unitaires</td><td>Dont 2 essais d'import PuTTY et 6 essais de la passerelle FTP</td><td class="ok">44 sur 44</td></tr>
+    <tr><td>Autres bancs <code>mc-core</code></td><td>Serveur russh local, routes, tunnels, agent</td><td class="ok">Tous réussis</td></tr>
+    <tr><td><code>passerelle_ftp_reelle</code></td><td>Client FTP de test contre la passerelle, reliée à la VM 102</td><td class="ok">Réussi</td></tr>
+    <tr><td>Front</td><td><code>svelte-check</code> et construction Vite</td><td class="ok">0 erreur</td></tr>
+  </table></div>
+
+  <h2>Passerelle FTP vers SFTP</h2>
+  <p>Essayée dans l'application, avec <code>curl</code> comme client indépendant.</p>
+  <div class="tableau"><table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Inactive par défaut, aucun accès affiché</td><td class="ok">Conforme</td></tr>
+    <tr><td>Port déjà occupé : message clair</td><td class="ok">Conforme</td></tr>
+    <tr><td>Mot de passe masqué, affiché à la demande</td><td class="ok">Conforme</td></tr>
+    <tr><td>Commandes refusées sans authentification, mauvais mot de passe refusé</td><td class="ok">Conforme</td></tr>
+    <tr><td>Envoi, liste, téléchargement (200 Ko, contenu identique), suppression</td><td class="ok">Conforme</td></tr>
+    <tr><td>Reprise (<code>REST</code>), ajout (<code>APPE</code>), renommage, dossiers, <code>MLSD</code>, noms accentués</td><td class="ok">Conforme</td></tr>
+    <tr><td>Mode actif (<code>PORT</code>, <code>EPRT</code>) refusé</td><td class="ok">Conforme</td></tr>
+    <tr><td>Port fermé après « Fermer » et à la déconnexion</td><td class="ok">Conforme</td></tr>
+    <tr><td>Nouveau mot de passe à chaque ouverture, absent du journal</td><td class="ok">Conforme</td></tr>
+  </table></div>
+  <p>Le test réel a révélé un défaut, corrigé : la position de reprise était perdue si le client envoyait <code>EPSV</code> entre <code>REST</code> et le transfert.</p>
+
+  <h2>Autres fonctions</h2>
+  <div class="tableau"><table>
+    <tr><th>Fonction</th><th>Vérifié</th><th>Résultat</th></tr>
+    <tr><td>Journal de session</td><td>Entrées, filtres, recherche, export <code>.log</code>, refus d'un <code>.exe</code>, affichage à 390 px</td><td class="ok">Conforme</td></tr>
+    <tr><td>Favoris SFTP</td><td>Ajout, retour au dossier, persistance</td><td class="ok">Conforme</td></tr>
+    <tr><td>Miroir, vers le serveur</td><td>Aperçu exact, contenus copiés, second passage sans action, suppression seulement sur demande, arrêt sur dossier illisible</td><td class="ok">Conforme</td></tr>
+    <tr><td>Glisser-déposer SFTP</td><td>Dans les deux sens, contenus identiques ; dépôt sur le panneau d'origine sans effet. Événements réels de la page, pilotés par le protocole de débogage, sans souris physique</td><td class="ok">Conforme</td></tr>
+    <tr><td>Import PuTTY</td><td>v2 et v3, claire et protégée, mauvaise passphrase, conversion au format OpenSSH</td><td class="ok">Conforme</td></tr>
+    <tr><td>Icône <code>.ico</code></td><td>16, 24, 32, 48, 64 et 256 px déjà présents</td><td class="ok">Conforme</td></tr>
+  </table></div>
+
+  <h2>Non vérifié</h2>
+  <ul>
+    <li>Passerelle FTP avec FileZilla, WinSCP ou un logiciel métier : seuls <code>curl</code> et le client de test ont été employés.</li>
+    <li>Miroir vers ce poste, refus de suppression sur une racine, interruption de session pendant un miroir.</li>
+    <li>Connexion réelle à un serveur avec une clé importée depuis PuTTY.</li>
+    <li>Intégration continue Linux et macOS : le fichier est écrit, mais il n'a jamais tourné, faute de dépôt GitHub.</li>
+  </ul>
+
+  <h2>Limites connues de la passerelle FTP</h2>
+  <ul>
+    <li>FTP n'est pas chiffré entre le logiciel et MLS Connect. L'écoute est limitée à ce poste.</li>
+    <li>Une application locale malveillante pourrait saisir un canal de données pendant les quelques instants où il attend : à n'activer que sur un poste de confiance et le temps du besoin.</li>
+    <li>L'annulation d'un transfert passe par la fermeture du canal de données par le client ; un envoi annulé laisse un fichier partiel.</li>
+    <li>Non proposée sur Android.</li>
+  </ul>
+</main>
+</body>
+</html>

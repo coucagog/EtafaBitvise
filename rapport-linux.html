@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Version Linux</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  .non { color: var(--alerte); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : version Linux</h1>
+  <p class="sous">9 et 10 novembre 2026 · construite et essayée sur la VM 102, Debian 13, 4 cœurs, 2,4 Go de mémoire · écran virtuel Xvfb</p>
+
+  <p class="bilan">L'application compile sous Linux et son cœur passe tous les tests. Les paquets <code>.deb</code> et AppImage sont produits et essayés : installation, lancement avec fenêtre complète et icône de barre, désinstallation.
+  Elle n'a pas encore été utilisée sur un vrai bureau Linux : les essais d'interface se limitent au démarrage, sur un écran virtuel.</p>
+
+  <h2>Résultats</h2>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Vérification de l'interface (<code>svelte-check</code>) : 0 erreur, 0 avertissement</td><td class="ok">Réussi</td></tr>
+    <tr><td>Tests du cœur : 78 réussis, 0 échec</td><td class="ok">Réussi</td></tr>
+    <tr><td>Essais réels contre OpenSSH : connexion, shell, SFTP, tunnels, rebond, proxy SOCKS, agent, passerelle FTP, coupure</td><td class="ok">10 sur 10</td></tr>
+    <tr><td>Trousseau du système (Secret Service, gnome-keyring) : écriture, lecture, effacement</td><td class="ok">Réussi</td></tr>
+    <tr><td>Binaire de débogage construit, aucune bibliothèque manquante</td><td class="ok">Réussi</td></tr>
+    <tr><td>Démarrage : processus actif après 30 s, fenêtre MLS Connect, icône de barre créée</td><td class="ok">Réussi</td></tr>
+    <tr><td>Instance unique : un second lancement se ferme, le premier reste actif</td><td class="ok">Réussi</td></tr>
+    <tr><td>Mise en page lue dans WebKit : titre, onglets, corps et pied aux bonnes positions</td><td class="ok">Réussi</td></tr>
+    <tr><td>Premier affichage complet, après correctif</td><td class="ok">Réussi</td></tr>
+    <tr><td>Paquet <code>.deb</code> : installation, lancement, fenêtre complète, désinstallation</td><td class="ok">Réussi</td></tr>
+    <tr><td>AppImage : lancement, fenêtre complète, icône de barre</td><td class="ok">Réussi</td></tr>
+  </table>
+  <p>L'essai de saisie interactive compte parmi les 10, mais il s'est sauté lui-même : aucun serveur à saisie interactive n'était configuré.</p>
+
+  <h2>Premier affichage</h2>
+  <p>Sous WebKitGTK, le premier dessin de la fenêtre transparente laissait vides la barre de titre, les onglets et le pied, alors que le DOM était correct.
+  <code>main.ts</code> force désormais un second dessin peu après le chargement. Vérifié avec et sans compositeur, et dans les deux paquets.
+  Une capture prise juste après la compilation est restée entièrement noire : premier démarrage à froid, non reproduit ensuite.</p>
+
+  <h2>Paquets</h2>
+  <table>
+    <tr><th>Fichier, dans <code>dist-linux/</code></th><th>Taille</th><th>SHA-256</th></tr>
+    <tr><td><code>mls-connect_0.1.0_amd64.deb</code></td><td>6,3 Mo</td><td><code>fd256cd55f8e8e194334c330f4bdc73c1bf9571c7d3fab3d89acf89a6582da97</code></td></tr>
+    <tr><td><code>MLS-Connect_0.1.0_amd64.AppImage</code></td><td>107 Mo</td><td><code>5ec9ae84a16f9a0b49c0cc6db4a587f758d65d116c544396a00f0c13fb87ab9f</code></td></tr>
+  </table>
+  <p>Dépendances du <code>.deb</code> : libayatana-appindicator3-1, libwebkit2gtk-4.1-0, libgtk-3-0. Paquets non signés.</p>
+
+  <h2>Non vérifié</h2>
+  <ul>
+    <li>Bureaux réels, GNOME ou KDE, et Wayland.</li>
+    <li>Parcours d'interface sous Linux : connexion depuis la fenêtre, terminal, SFTP, sélecteurs de fichiers.</li>
+    <li>Menu de l'icône de barre et raccourcis globaux.</li>
+    <li>macOS : ne peut pas être construit sur cette VM.</li>
+  </ul>
+</main>
+</body>
+</html>

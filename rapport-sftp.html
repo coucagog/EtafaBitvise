@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Écran SFTP</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+  .note { color: var(--alerte); }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : écran SFTP</h1>
+  <p class="sous">9 novembre 2026 · Windows 11, WebView2 · serveur : OpenSSH 10.0p2, Debian 13 (VM 102)</p>
+
+  <p class="bilan">Le SFTP fonctionne de bout en bout contre un vrai serveur OpenSSH, depuis l'application elle-même, avec la pause par <code>Ctrl+Shift+F8</code>.
+  Les fichiers téléchargés sont identiques aux originaux. Rien de cette étape n'a été exécuté sur Android, Linux ou macOS.</p>
+
+  <h2>Tests automatiques</h2>
+  <table>
+    <tr><th>Banc</th><th>Portée</th><th>Résultat</th></tr>
+    <tr><td><code>mc-core</code> unitaires</td><td>Profils, clés d'hôte, raccourcis, noms de fichiers renvoyés par le serveur</td><td class="ok">15 sur 15</td></tr>
+    <tr><td><code>tests/connexion.rs</code></td><td>Serveur russh local : connexion, terminal, perte de session</td><td class="ok">12 sur 12</td></tr>
+    <tr><td><code>tests/openssh_reel.rs</code></td><td>Vrai OpenSSH par tunnel Internet : terminal et SFTP</td><td class="ok">3 sur 3</td></tr>
+    <tr><td>Front</td><td><code>svelte-check</code> et construction Vite</td><td class="ok">0 erreur</td></tr>
+  </table>
+
+  <h2>Moteur contre le vrai serveur</h2>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Arborescence de 8 Mio envoyée en 3,4 s, reçue en 4,6 s</td><td class="ok">Réussi</td></tr>
+    <tr><td>Reprise d'un téléchargement et d'un envoi interrompus</td><td class="ok">Réussi</td></tr>
+    <tr><td>Conflits : écraser, reprendre, ignorer, renommer</td><td class="ok">Réussi</td></tr>
+    <tr><td>Pause et annulation d'un transfert</td><td class="ok">Réussi</td></tr>
+    <tr><td>Permissions, renommage, suppression</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Parcours dans l'application</h2>
+  <table>
+    <tr><th>Action</th><th>Résultat</th></tr>
+    <tr><td><code>Ctrl+Shift+S</code> ouvre l'onglet SFTP sur le dossier personnel distant</td><td class="ok">Réussi</td></tr>
+    <tr><td>Chemin local saisi au clavier</td><td class="ok">Réussi</td></tr>
+    <tr><td>Nouveau dossier distant, navigation, état « Dossier vide »</td><td class="ok">Réussi</td></tr>
+    <tr><td>Envoi d'un fichier</td><td class="ok">Réussi</td></tr>
+    <tr><td>Conflit : focus initial sur Annuler, résolution par Renommer</td><td class="ok">Réussi</td></tr>
+    <tr><td>Dépôt d'un dossier d'un panneau à l'autre (évènements simulés)</td><td class="ok">Réussi</td></tr>
+    <tr><td><code>Ctrl+Shift+F8</code> global suspend 32 Mio en cours : compteur figé</td><td class="ok">Réussi</td></tr>
+    <tr><td><code>Ctrl+Shift+F8</code> reprend, transfert terminé</td><td class="ok">Réussi</td></tr>
+    <tr><td>Téléchargement d'un fichier et d'un dossier, empreintes identiques</td><td class="ok">Réussi</td></tr>
+    <tr><td>Permissions, renommage</td><td class="ok">Réussi</td></tr>
+    <tr><td>Suppression récursive : focus initial sur Annuler, puis confirmation</td><td class="ok">Réussi</td></tr>
+    <tr><td>Déconnexion et retour aux profils</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Limites</h2>
+  <ul>
+    <li>Non exécuté : Android, Linux, macOS, serveur Bitvise.</li>
+    <li class="note">Le glisser-déposer a été simulé dans la page : un vrai glisser à la souris reste à essayer.</li>
+    <li class="note">Règle « Demander » : le dossier de destination est relu juste avant le transfert. Un fichier créé sur le serveur entre cette relecture et l'écriture serait écrasé.</li>
+    <li>Absents tant qu'ils ne sont pas réalisés : miroir, signets, mode texte, réordonnancement de la file, raccourcis <code>Alt+←</code> et <code>Alt+→</code>.</li>
+    <li>Le trafic SFTP n'entre pas encore dans les compteurs du pied de fenêtre.</li>
+  </ul>
+</main>
+</body>
+</html>

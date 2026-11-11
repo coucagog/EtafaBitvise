@@ -1,0 +1,111 @@
+/* Écrans tactiles (html.tactile), étroits (html.etroit) et application Android (html.android). */
+
+html.tactile {
+  --control-h: 48px;
+  --control-h-sm: 48px;
+  --row-h: 48px;
+  --blur-window: none;
+  --blur-popover: none;
+  --surface-window: var(--surface-window-opaque);
+  --surface-popover: var(--surface-popover-opaque, var(--surface-window-opaque));
+}
+html.tactile #app { height: var(--hauteur-visible, 100%); }
+
+html.android, html.android body { background: var(--surface-window-opaque); }
+/* La barre d'état recouvre la page quand le système ne renseigne pas l'encart. */
+html.android #app {
+  padding: max(env(safe-area-inset-top, 0px), 28px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+html.android .fenetre { border-radius: 0; border-width: 0; }
+
+/* Cibles de 48 px */
+html.tactile .btn-icone,
+html.tactile .outil { width: 48px; height: 48px; }
+html.tactile .outil.taille { width: auto; }
+html.tactile .affichage,
+html.tactile .plus { height: 48px; min-width: 48px; }
+html.tactile .onglet,
+html.tactile .segment button,
+html.tactile .menu button,
+html.tactile .vues button,
+html.tactile .action,
+html.tactile .interfaces button,
+html.tactile .profil { min-height: 48px; height: auto; }
+html.tactile .segment.plein button { height: 48px; }
+html.tactile .principale,
+html.tactile .sections,
+html.tactile .vues,
+html.tactile .nav,
+html.tactile .tete,
+html.tactile .outils,
+html.tactile .editeur-tete,
+html.tactile .editeur-pied { height: auto; flex-basis: auto; min-height: 48px; }
+html.tactile .barre-onglets { height: 54px; flex-basis: 54px; }
+html.tactile .onglet-session { height: 47px; }
+html.tactile .onglet-session button { width: 44px; height: 44px; }
+html.tactile [role=grid] .ligne { height: 48px; }
+html.tactile .journal .entete { height: 48px; }
+html.tactile .chemin,
+html.tactile .filtre,
+html.tactile .recherche { height: 48px; }
+html.tactile .filtre button,
+html.tactile .recherche button { width: 44px; height: 44px; }
+html.tactile input[type="checkbox"] { width: 24px; height: 24px; }
+html.tactile .option select { height: 48px; }
+html.tactile .vues { overflow-x: auto; scrollbar-width: none; }
+html.tactile .bas { height: auto; flex-basis: auto; flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px; }
+html.tactile .kbd { display: none; }
+html.tactile .vues button { flex: none; white-space: nowrap; }
+html.tactile .filtre input { height: 100%; }
+html.tactile .interrupteur { position: relative; }
+html.tactile .interrupteur::before { content: ""; position: absolute; inset: -14px -7px; }
+
+/* Largeur de téléphone */
+html.etroit .ligne-champ { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+html.etroit .contenu { padding: 14px 16px; }
+html.etroit .limite { max-width: none; }
+html.etroit footer { display: none; }
+html.etroit .espace-travail { grid-template-columns: minmax(0, 1fr); }
+html.etroit nav[aria-label="Actions de session"] { display: none; }
+html.etroit .barre .mono { display: none; }
+html.etroit .recherche,
+html.etroit .trait { display: none; }
+html.etroit .outils { flex-wrap: wrap; justify-content: flex-end; }
+html.etroit .outils[aria-label="Terminal"] { flex-wrap: nowrap; gap: 0; padding: 0 4px; }
+html.etroit .outils[aria-label="Terminal"] .outil { width: 44px; }
+html.etroit .outils[aria-label="Terminal"] .outil.taille { width: auto; min-width: 44px; }
+html.etroit .affichage { font-size: 0; gap: 0; justify-content: center; }
+html.etroit .barre .nom-app { display: none; }
+html.etroit .barre .titre > * { white-space: nowrap; flex: none; }
+html.etroit .barre .titre > .fort { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+html.etroit .popover { left: 8px; right: 8px; width: auto; }
+html.etroit .carte-actions { flex-wrap: wrap; }
+html.etroit .onglet-session { flex: 0 0 148px; }
+
+html.etroit .entetes { display: none; }
+html.etroit [role=grid] .ligne { grid-template-columns: minmax(0, 1fr) 76px !important; }
+html.etroit [role=grid] .ligne > span:nth-child(n + 3) { display: none; }
+html.etroit .journal .lignes { height: 112px; }
+html.etroit .journal .ligne { height: auto; padding: 4px 12px; grid-template-columns: 96px minmax(0, 1fr); gap: 2px 8px; }
+html.etroit .journal .source { display: none; }
+html.etroit .journal .message { grid-column: 1 / -1; white-space: normal; }
+html.etroit .filtre { width: 120px; }
+
+html.etroit .outils { padding: 4px 12px; gap: 8px; }
+html.etroit .nouveaux { flex-wrap: wrap; }
+html.etroit .rangee { min-width: 0; }
+html.etroit .rangee .grille {
+  min-width: 0; padding: 10px 12px; row-gap: 4px;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+}
+html.etroit .rangee .grille > * { grid-column: 2 / -1; }
+html.etroit .rangee .grille > :first-child { grid-column: 1; grid-row: 1 / span 3; }
+html.etroit .rangee .grille > :nth-child(2) { grid-column: 2; grid-row: 1; }
+html.etroit .rangee .grille > .actions { grid-column: 3; grid-row: 1; }
+html.etroit .detail { padding-left: 12px; }
+html.etroit .editeur { position: absolute; inset: 0; z-index: 40; width: auto; border-left: 0; background: var(--surface-window-opaque); }
+html.etroit .outils .segment button { min-width: 44px; }
+html.tactile .signets button { min-height: 48px; }
+html.tactile .signets .retirer { width: 48px; }
+html.etroit .panneau .nav { flex-wrap: wrap; }
+html.etroit .panneau .nav .chemin { flex: 1 1 100%; margin-left: 0; }

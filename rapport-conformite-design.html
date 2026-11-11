@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conformité des maquettes</title>
+<style>
+:root{--ok:#4ade80;--warn:#fbbf24;--err:#f87171;--blue:#60a5fa;--t1:#f0f0f0;--t2:#d8d8d8;--t3:#a8a8a8;--bg:#1c1c1c;--s1:#242424;--line:rgba(255,255,255,.12)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t2);font:14px/1.55 "Segoe UI Variable","Segoe UI",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:32px 16px 56px}
+h1{margin:0 0 6px;font-size:24px;font-weight:600;color:var(--t1)}
+h2{margin:32px 0 10px;font-size:16px;font-weight:600;color:var(--t1)}
+p{margin:0 0 10px}
+.sub{color:var(--t3);font-size:13px}
+.verdict{margin:20px 0 0;padding:14px 16px;background:var(--s1);border-left:3px solid var(--warn);border-radius:4px;color:var(--t1)}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-size:12px;font-weight:600;color:var(--t3);background:var(--s1)}
+tr:last-child td{border-bottom:0}
+code{font:12px ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--t1)}
+.ok{color:var(--ok);white-space:nowrap}.w{color:var(--warn);white-space:nowrap}.e{color:var(--err);white-space:nowrap}
+ul{margin:0;padding-left:20px}li{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Conformité des maquettes Claude Design</h1>
+<p class="sub">Contrôle du 8 novembre 2026, sur les 7 exports de <code>Cdesign/exports/</code>, comparés au brief commun et aux prompts 01 à 07.</p>
+<p class="verdict">Les maquettes sont utilisables comme référence. Les 7 écrans couvrent leur prompt, et 9 corrections sont à appliquer à l'intégration. Aucune ne demande de nouvel export.</p>
+
+<h2>Couverture des prompts</h2>
+<div class="scroll"><table>
+<tr><th>Export</th><th>Résultat</th><th>Remarque</th></tr>
+<tr><td>01 Planche de composants</td><td class="ok">Conforme</td><td>Matrice des 6 états, bascule du fond opaque, variables ajoutées</td></tr>
+<tr><td>02 Connexion et profils</td><td class="w">1 correction sécurité, 1 taille</td><td>Clé modifiée bien bloquée, remplacement soumis à une vérification cochée</td></tr>
+<tr><td>03 Session et terminal</td><td class="w">Polices externes</td><td>Le bureau distant y est montré comme un flux VNC intégré, non évalué dans la faisabilité</td></tr>
+<tr><td>04 Transferts SFTP</td><td class="ok">Conforme</td><td>Option de miroir signalée « Destructif »</td></tr>
+<tr><td>05 Tunnels et journal</td><td class="ok">Conforme</td><td>Secrets masqués à la source dans le journal</td></tr>
+<tr><td>06 Android</td><td class="w">Cibles et marges</td><td>14 boutons sous 48 px, pas de zones sûres réelles</td></tr>
+<tr><td>07 Icône et barre des tâches</td><td class="ok">Conforme</td><td>Piste C · Crochets retenue, menu conforme au prompt</td></tr>
+</table></div>
+
+<h2>Corrections à l'intégration</h2>
+<div class="scroll"><table>
+<tr><th>Priorité</th><th>Constat</th><th>Correction</th></tr>
+<tr><td class="e">Sécurité</td><td>Clé d'hôte inconnue : le focus est dessiné sur « Enregistrer et accepter »</td><td>Focus initial sur Annuler</td></tr>
+<tr><td class="e">Sécurité</td><td>Les 7 maquettes chargent Lucide depuis <code>unpkg.com</code>, la 03 aussi Google Fonts</td><td>Tout embarquer en local, conformément à la CSP stricte</td></tr>
+<tr><td class="e">Android</td><td>10 boutons à 44 px et 4 à 36 px, pour 48 px exigés</td><td>Passer à <code>--touch-min</code> (48 px), qui remplace les 44 px de la planche</td></tr>
+<tr><td class="e">Android</td><td>Barres système dessinées, aucun <code>env(safe-area-inset-*)</code></td><td>Marges réelles, sinon le chevauchement déjà vu sur la tablette reviendra</td></tr>
+<tr><td class="w">Brief</td><td>6 libellés <code>.kbd</code> à 10 px dans l'écran 02</td><td>Passer à 11 px</td></tr>
+<tr><td class="w">Contraste</td><td><code>--text-faint</code> à 4,05:1 et <code>--rec-500</code> à 3,81:1 sur un fond de champ estimé à <code>#2a2a2a</code></td><td>Sur ces fonds, <code>--text-muted</code> et <code>--danger-text</code></td></tr>
+<tr><td class="w">Terminal</td><td>JetBrains Mono et IBM Plex Mono proposées sans fichiers de police</td><td>Les embarquer ou retirer ces choix</td></tr>
+<tr><td class="w">Accessibilité</td><td>Animations sans <code>prefers-reduced-motion</code> (écrans 02, 03, 04)</td><td>Ajouter la règle</td></tr>
+<tr><td class="w">Vérité produit</td><td>Liste d'algorithmes fictive dans l'écran 02</td><td>L'alimenter avec ce que <code>russh</code> prend réellement en charge</td></tr>
+</table></div>
+
+<h2>Points vérifiés sans écart</h2>
+<ul>
+<li>Tokens : aucune valeur divergente entre les exports. Tokens YawREC conservés, hors <code>--font-lcd</code>, propre à YawREC.</li>
+<li>Toutes les variables utilisées sont définies.</li>
+<li>Contraste sur le fond opaque <code>#1c1c1c</code> : texte principal 14,95:1, secondaire 11,96:1, atténué 5,98:1, très atténué 4,81:1, rouge 4,53:1.</li>
+<li>Pas de marque tierce affichée. PuTTY n'apparaît que pour nommer le format <code>.ppk</code>.</li>
+<li>Aucun libellé anglais courant détecté (recherche par liste de mots).</li>
+</ul>
+
+<h2>Limites de ce contrôle</h2>
+<ul>
+<li>Lecture du code seulement : les maquettes n'ont pas été affichées, donc les débordements et l'alignement restent à contrôler sur l'application réelle.</li>
+<li>Les ratios sur surfaces translucides sont calculés sur des fonds opaques équivalents.</li>
+<li>L'import <code>.ppk</code> et le bureau distant VNC figurent dans les maquettes, mais leur faisabilité n'a pas été testée.</li>
+</ul>
+</main>
+</body>
+</html>

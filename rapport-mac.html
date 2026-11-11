@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Version macOS</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--alerte); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  .non { color: var(--alerte); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : version macOS</h1>
+  <p class="sous">11 novembre 2026 · préparée sans Mac · interface simulée dans la WebView de Windows</p>
+
+  <p class="bilan">La version macOS est préparée : configuration propre au Mac, adaptation de l'interface, trousseau Keychain.
+  <strong>Elle n'a jamais été compilée</strong> : il faut un Mac ou la CI GitHub, mise en attente. Le SDK d'Apple n'est licencié que sur matériel Apple, ce qui exclut une compilation croisée depuis Linux.</p>
+
+  <h2>Préparé</h2>
+  <table>
+    <tr><th>Élément</th><th>État</th></tr>
+    <tr><td><code>tauri.macos.conf.json</code> : barre de titre native superposée, fenêtre opaque, paquets <code>.app</code> et <code>.dmg</code>, macOS 11 au minimum</td><td class="non">Écrit, non construit</td></tr>
+    <tr><td>Interface : classe <code>mac</code>, fond opaque, coins droits, nos boutons de fenêtre masqués, 78 px laissés aux boutons du système</td><td class="ok">Vérifié en simulation</td></tr>
+    <tr><td>Windows inchangé : nos boutons visibles, coins arrondis, fond transparent</td><td class="ok">Vérifié</td></tr>
+    <tr><td>Trousseau : Keychain par <code>keyring</code> (<code>apple-native</code>)</td><td class="non">Prévu dès l'origine, non compilé</td></tr>
+    <tr><td>Raccourcis : Ctrl conservé, Alt+C et Alt+V reconnus à la touche physique (Option+C produit « ç »)</td><td class="ok">Logique vérifiée</td></tr>
+    <tr><td>CI GitHub : tâche <code>macos-latest</code> déjà écrite dans <code>.github/workflows/build.yml</code></td><td class="non">Jamais exécutée</td></tr>
+  </table>
+
+  <h2>Choix</h2>
+  <ul>
+    <li>Pas de fenêtre transparente sur Mac : elle exigerait une API privée d'Apple, refusée sur le Mac App Store.</li>
+    <li>Barre de titre superposée : les trois boutons natifs remplacent les nôtres, le reste de notre barre est conservé.</li>
+    <li>Distribution hors App Store sans alerte Gatekeeper : un certificat Developer ID et la notarisation seront nécessaires. Sans eux, ouvrir l'application par clic droit puis « Ouvrir ».</li>
+  </ul>
+
+  <h2>À vérifier sur un Mac</h2>
+  <ul>
+    <li>Compilation, puis paquets <code>.app</code> et <code>.dmg</code>.</li>
+    <li>Position des boutons natifs face à notre barre de 32 px.</li>
+    <li>Icône de barre de menus (en couleur, pas en modèle monochrome).</li>
+    <li>Raccourcis globaux Ctrl+Shift+F7 et F8 (touche Fn selon le clavier).</li>
+    <li>Keychain, agent SSH, sélecteurs de fichiers, copier-coller dans les champs.</li>
+  </ul>
+</main>
+</body>
+</html>

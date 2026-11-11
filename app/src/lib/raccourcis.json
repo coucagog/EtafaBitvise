@@ -1,0 +1,21 @@
+{
+  "reservesYawrec": ["Ctrl+Shift+F9", "Ctrl+Shift+F10"],
+  "globaux": [
+    { "id": "connexion", "touches": "Ctrl+Shift+F7", "action": "Se connecter / Se déconnecter" },
+    { "id": "pause", "touches": "Ctrl+Shift+F8", "action": "Pause / reprise des transferts" }
+  ],
+  "fenetre": [
+    { "id": "nouveau", "touches": "Ctrl+N", "portee": "profils", "action": "Nouveau profil" },
+    { "id": "enregistrer", "touches": "Ctrl+S", "portee": "profils", "action": "Enregistrer le profil" },
+    { "id": "reconnecter", "touches": "Ctrl+Shift+P", "portee": "terminal", "action": "Se reconnecter après une déconnexion" },
+    { "id": "copier", "touches": "Alt+C", "portee": "terminal", "action": "Copier" },
+    { "id": "coller", "touches": "Alt+V", "portee": "terminal", "action": "Coller" },
+    { "id": "rechercher", "touches": "Ctrl+Shift+F", "portee": "terminal", "action": "Rechercher dans l'historique" },
+    { "id": "nouveau-terminal", "touches": "Ctrl+Shift+T", "portee": "terminal", "action": "Nouveau terminal" },
+    { "id": "nouveau-sftp", "touches": "Ctrl+Shift+S", "portee": "terminal", "action": "Ouvrir le SFTP" },
+    { "id": "tunnels", "touches": "Ctrl+Shift+L", "portee": "terminal", "action": "Ouvrir les tunnels" },
+    { "id": "zoom-avant", "touches": "Ctrl+=", "portee": "terminal", "action": "Agrandir la police" },
+    { "id": "zoom-arriere", "touches": "Ctrl+-", "portee": "terminal", "action": "Réduire la police" },
+    { "id": "zoom-defaut", "touches": "Ctrl+0", "portee": "terminal", "action": "Taille de police par défaut" }
+  ]
+}

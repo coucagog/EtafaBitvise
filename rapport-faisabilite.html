@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faisabilité client SSH</title>
+<style>
+:root{--ok:#4ade80;--blue:#60a5fa;--warn:#fbbf24;--bad:#ef4444;--t1:#f0f0f0;--t2:#d8d8d8;--t3:#a8a8a8;--line:rgba(255,255,255,.09);--bg:#181818;--panel:#202020;--mono:ui-monospace,"Cascadia Mono",Consolas,monospace;font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t2);font-size:15px;line-height:1.55}
+main{max-width:1020px;margin:0 auto;padding:32px 16px 64px}
+h1{color:var(--t1);font-size:27px;margin:0 0 4px}
+h2{color:var(--t1);font-size:19px;margin:38px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+p{margin:8px 0}.sub{color:var(--t3);font-size:13px}
+.verdict{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:15px 18px;margin:20px 0}
+.verdict strong{color:var(--t1)}
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:13.5px}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--t3);font-weight:600;font-size:12px;background:var(--panel)}
+tr:last-child td{border-bottom:0}
+code{font-family:var(--mono);font-size:12.5px;color:var(--t1)}
+.t{display:inline-block;white-space:nowrap;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:4px}
+.ok{color:var(--ok);background:rgba(74,222,128,.12)}.blue{color:var(--blue);background:rgba(96,165,250,.14)}.warn{color:var(--warn);background:rgba(251,191,36,.12)}.bad{color:#fca5a5;background:rgba(239,68,68,.16)}
+ul{padding-left:20px;margin:8px 0}li{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Faisabilité d'un client SSH multiplateforme</h1>
+<p class="sub">Rust + Vite, pour Windows, Linux, macOS et Android · référence Bitvise SSH Client 9.66 · 8 novembre 2026</p>
+
+<div class="verdict">
+<p><strong>Verdict : le cœur SSH en Rust fonctionne sous Windows (18 tests réussis sur 19) et sur une vraie tablette Android (16 sur 17 dans l'application).</strong></p>
+<p><strong>Le client russh ne bloque pas face à un vrai serveur OpenSSH</strong> : 33 essais réussis sur 33 en trafic intense dans les deux sens, dont 22 à pleine vitesse. Les blocages relevés sur le banc n'apparaissent qu'avec notre serveur russh de test ; ils ne concernent pas l'usage prévu, un client russh face à de vrais serveurs.</p>
+<p>Une APK Tauri + Vite de test tourne sur la tablette. Linux et macOS n'ont pas été compilés, et l'interface réelle reste à construire.</p>
+</div>
+
+<h2>Légende</h2>
+<p><span class="t ok">Vérifié</span> constaté sur cette machine ou dans le code source &nbsp; <span class="t blue">Documenté</span> d'après une source, non essayé &nbsp; <span class="t warn">À tester</span> &nbsp; <span class="t bad">Bloquant</span></p>
+
+<h2>Environnement constaté</h2>
+<div class="wrap"><table>
+<tr><th>Élément</th><th>Constat</th><th>État</th></tr>
+<tr><td>Machine</td><td>i5-7500T, 4 cœurs, 15,9 Go de RAM (5,3 Go libres), 258 Go libres</td><td><span class="t warn">Partagée</span></td></tr>
+<tr><td>Rust, Tauri</td><td>rustc et cargo 1.98.1, tauri-cli 2.12.4, VS Build Tools 2022</td><td><span class="t ok">Vérifié</span></td></tr>
+<tr><td>Front</td><td>Node 22.23.2, npm 10.9.8 ; registre : Vite 8.3.6, @tauri-apps/api 2.12.4, @xterm/xterm 6.0.0</td><td><span class="t ok">Vérifié</span></td></tr>
+<tr><td>Bibliothèques SSH</td><td>russh 0.65.1, russh-sftp 3.0.1, téléchargées</td><td><span class="t ok">Vérifié</span></td></tr>
+<tr><td>Cibles Rust</td><td>Windows, Linux x86_64, macOS x86_64 et ARM, Android x86_64 et ARM64 installées</td><td><span class="t ok">Vérifié</span></td></tr>
+<tr><td>Android</td><td>JDK 21, SDK 36 et 37, NDK r30 (30.0.16248370) ; tablette RGPH-5, Android 12, ARM64</td><td><span class="t ok">Vérifié</span></td></tr>
+<tr><td>Linux, macOS</td><td>Pas de distribution WSL ni de Docker ; pas de Mac</td><td><span class="t warn">CI à prévoir</span></td></tr>
+<tr><td>Serveur OpenSSH réel</td><td>Client OpenSSH 10.3p1 disponible, <code>sshd</code> absent</td><td><span class="t warn">À prévoir</span></td></tr>
+</table></div>
+
+<h2>Bitvise : ce qui change après la connexion</h2>
+<p>La colonne de gauche devient une colonne d'actions (libellés confirmés dans l'exécutable installé et les captures officielles). Un terminal et une fenêtre SFTP s'ouvrent par défaut.</p>
+<div class="wrap"><table>
+<tr><th>Zone</th><th>Fonctions</th></tr>
+<tr><td>Actions</td><td>Save profile, Save profile as, Bitvise SSH Server Control Panel, New terminal console, New SFTP window, New Remote Desktop, Log out</td></tr>
+<tr><td>Fenêtre SFTP</td><td>Panneaux Local files et Remote files, vues Browse, Upload queue, Download queue, Log ; filtres, Auto start, Binary, règle si le fichier existe, Pause</td></tr>
+<tr><td>Files de transfert</td><td>Démarrer, pause, déplacer, retirer, suivre l'actif, reprise, écrasement, renommage</td></tr>
+<tr><td>Miroir</td><td>Local vers distant et inverse, suppression optionnelle des absents</td></tr>
+<tr><td>Terminal</td><td>xterm, VT100, bvterm, ligatures, palette</td></tr>
+<tr><td>Session</td><td>Reconnexion automatique, keep-alive, règles C2S et S2C, compteurs d'octets, invite de déconnexion</td></tr>
+<tr><td>Services</td><td>Proxy SOCKS et HTTP, pont FTP, lecteur SFTP, bureau à distance via MSTSC</td></tr>
+</table></div>
+<p class="sub">Inventaire complet : <code>Doc-Ref/01-perimetre-bitvise.md</code></p>
+
+<h2>Faisabilité par fonction et plateforme</h2>
+<div class="wrap"><table>
+<tr><th>Fonction</th><th>Windows</th><th>Linux</th><th>macOS</th><th>Android</th><th>Base technique</th></tr>
+<tr><td>Échange de clés post-quantique, kex strict</td><td colspan="4"><span class="t blue">Prévu partout</span></td><td><code>mlkem768x25519-sha256</code> présent dans russh <span class="t ok">Vérifié</span></td></tr>
+<tr><td>Mot de passe, clés, keyboard-interactive, agent</td><td colspan="4"><span class="t blue">Prévu partout</span></td><td>API présentes dans russh <span class="t ok">Vérifié</span></td></tr>
+<tr><td>Terminal xterm</td><td colspan="3"><span class="t blue">Oui</span></td><td><span class="t warn">Clavier à adapter</span></td><td>xterm.js, canal PTY</td></tr>
+<tr><td>SFTP, files, reprise, miroir</td><td colspan="3"><span class="t blue">Oui</span></td><td><span class="t warn">Accès fichiers limité</span></td><td>russh-sftp ; files et miroir à écrire</td></tr>
+<tr><td>C2S, S2C, SOCKS5, HTTP CONNECT</td><td colspan="3"><span class="t blue">Oui</span></td><td><span class="t warn">Service au premier plan</span></td><td>Canaux russh ; proxy à écrire</td></tr>
+<tr><td>Rebond, reconnexion</td><td colspan="4"><span class="t blue">Prévu partout</span></td><td><code>connect_stream</code> ; reconnexion à écrire</td></tr>
+<tr><td>Kerberos</td><td><span class="t warn">SSPI</span></td><td><span class="t warn">GSSAPI</span></td><td><span class="t warn">GSSAPI</span></td><td><span class="t bad">Non prévu</span></td><td>Code gssapi présent dans russh, non évalué</td></tr>
+<tr><td>Bureau à distance</td><td><span class="t blue">MSTSC</span></td><td><span class="t warn">Client externe</span></td><td><span class="t warn">Client externe</span></td><td><span class="t bad">Non</span></td><td>Tunnel + lancement du client</td></tr>
+<tr><td>Lecteur SFTP</td><td><span class="t warn">WinFsp</span></td><td><span class="t warn">FUSE</span></td><td><span class="t warn">macFUSE</span></td><td><span class="t bad">Non</span></td><td>Module par plateforme, phase ultérieure</td></tr>
+</table></div>
+
+<h2>Limites de compatibilité avec Bitvise</h2>
+<ul>
+<li><strong>Profils <code>.tlp</code></strong> : aucun format publié trouvé, import non prévu.</li>
+<li><strong>Obfuscation Bitvise</strong> : aucune spécification publique trouvée, compatibilité non garantie.</li>
+<li><strong>Panneau de contrôle serveur et règles centralisées</strong> : propres à Bitvise SSH Server, exclus.</li>
+<li><strong>bvterm</strong> : spécification publique de 2010, basse priorité.</li>
+<li><strong><code>mlkem1024nistp384</code> et <code>sntrup761</code></strong> : absents de russh 0.65.1 ; <code>mlkem768x25519</code> reste disponible.</li>
+</ul>
+
+<h2>Résultats des tests : 18 réussis sur 19</h2>
+<p>Exécutés sous Windows x64 en mode release, sur <code>127.0.0.1</code> uniquement, avec russh 0.65.1. Aucun serveur extérieur n'a été contacté.</p>
+<div class="wrap"><table>
+<tr><th>Groupe</th><th>Test</th><th>Résultat observé</th><th>État</th></tr>
+<tr><td>Sécurité</td><td>Échange de clés post-quantique</td><td><code>mlkem768x25519-sha256</code> seul proposé, avec kex strict : session établie</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Sécurité</td><td>Empreinte serveur inconnue</td><td>Connexion refusée</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Authentification</td><td>Mot de passe</td><td>Faux refusé, correct accepté</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Authentification</td><td>Clés publiques</td><td>Ed25519, ECDSA P-256, RSA SHA-512</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Authentification</td><td>Clé OpenSSH à passphrase</td><td>Mauvaise passphrase refusée, bonne utilisée</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Terminal</td><td>Exécution distante</td><td>Sortie capturée, codes retour 0 et 42</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Terminal</td><td>Console xterm</td><td>PTY, saisie, passage de 80×24 à 120×40</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>SFTP</td><td>Opérations de fichiers</td><td>Création, listing, stat, renommage, suppression</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>SFTP</td><td>Intégrité sur 32 Mio</td><td>SHA-256 identique ; envoi 163 Mio/s, réception 231 Mio/s</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>SFTP</td><td>Reprise de transfert</td><td>Reprise à 1,5 Mo, SHA-256 identique</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Tunnels</td><td>C2S et S2C</td><td>Aller-retour correct dans les deux redirections</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Tunnels</td><td>SOCKS5</td><td>Résolution par nom via SSH, aller-retour correct</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Tunnels</td><td>Rebond</td><td>Session SSH imbriquée dans un canal du serveur intermédiaire</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Robustesse</td><td>Débit d'un tunnel, un seul sens</td><td>128 Mio à 184 Mio/s</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Robustesse</td><td>Coupure et nouvelle session</td><td>Coupure détectée, nouvelle session opérationnelle</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Interopérabilité</td><td>Client <code>ssh</code> OpenSSH 10.3 vers russh</td><td>KEX ML-KEM forcée, commande exécutée</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Interopérabilité</td><td>Client <code>sftp</code> OpenSSH 10.3 vers russh-sftp</td><td>Listing et téléchargement corrects</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Robustesse</td><td>64 canaux simultanés, 256 Kio dans les deux sens</td><td>Bloqué après 90 s</td><td><span class="t bad">Échec</span></td></tr>
+</table></div>
+<p class="sub">La ligne C2S et S2C regroupe deux tests, soit 19 au total. Les débits sont mesurés avec client et serveur sur la même machine : ils ne prédisent pas un débit réseau.</p>
+
+<h2>Diagnostic du blocage</h2>
+<div class="wrap"><table>
+<tr><th>Canaux</th><th>Taille par canal</th><th>Volume dans chaque sens</th><th>Résultat</th></tr>
+<tr><td>1</td><td>256 Kio</td><td>256 Kio</td><td><span class="t ok">OK, 5 ms</span></td></tr>
+<tr><td>8</td><td>256 Kio</td><td>2 Mio</td><td><span class="t ok">OK, 20 ms</span></td></tr>
+<tr><td>32</td><td>256 Kio</td><td>8 Mio</td><td><span class="t warn">OK, puis blocage au 2e essai</span></td></tr>
+<tr><td>64</td><td>16 Kio</td><td>1 Mio</td><td><span class="t ok">OK, 16 ms</span></td></tr>
+<tr><td>64</td><td>256 Kio</td><td>16 Mio</td><td><span class="t bad">Blocage</span></td></tr>
+<tr><td>1</td><td>16 Mio</td><td>16 Mio</td><td><span class="t bad">Blocage</span></td></tr>
+<tr><td colspan="3">Contrôle sans SSH, 16 Mio dans les deux sens</td><td><span class="t ok">OK, 111 ms</span></td></tr>
+<tr><td colspan="3"><strong>Vrai client OpenSSH</strong> (<code>ssh -L</code>) vers le serveur russh, 16 Mio</td><td><span class="t ok">OK, 687 ms</span></td></tr>
+<tr><td colspan="3">Client russh avec <code>TCP_NODELAY</code>, 16 Mio</td><td><span class="t bad">Blocage</span></td></tr>
+<tr><td colspan="3">Client russh avec fenêtre de 256 Kio, 16 Mio</td><td><span class="t bad">Blocage</span></td></tr>
+</table></div>
+<p>Un envoi de 128 Mio dans un seul sens passe. Le cas à 32 canaux a réussi une fois, puis a bloqué à chaque essai suivant.</p>
+<h3>Essais qui séparent les deux mécanismes</h3>
+<div class="table"><table>
+<tr><th>Modification</th><th>1 canal, 16 Mio</th><th>64 canaux, 256 Kio</th></tr>
+<tr><td>Aucune</td><td><span class="t bad">Blocage</span></td><td><span class="t bad">Blocage</span></td></tr>
+<tr><td>File de canal agrandie côté client seul</td><td><span class="t bad">0 réussi sur 3</span></td><td><span class="t bad">0 réussi sur 3</span></td></tr>
+<tr><td>File de canal agrandie côté serveur seul</td><td><span class="t ok">3 réussis sur 3</span></td><td><span class="t bad">0 réussi sur 3</span></td></tr>
+<tr><td>Files agrandies des deux côtés</td><td><span class="t ok">2 réussis sur 2</span></td><td><span class="t bad">0 réussi sur 2</span></td></tr>
+<tr><td>Relais réseau à tampon illimité entre les deux</td><td><span class="t bad">0 réussi sur 3</span></td><td><span class="t ok">3 réussis sur 3</span> (32 canaux : 3 sur 3)</td></tr>
+</table></div>
+<p><strong>Canal unique :</strong> seule la file du serveur russh de test compte. L'agrandir supprime le blocage ; agrandir celle du client n'y change rien. La boucle de session russh attend quand la file d'un canal est pleine (<code>server/encrypted.rs:1514</code>). Le relais de test vers le service d'écho pourrait alors former un cycle d'attente avec elle : ce cycle est déduit du code, pas observé directement. Ce blocage concerne le serveur de test, pas notre client.</p>
+<p><strong>Nombreux canaux :</strong> seul le relais réseau supprime le blocage. Les deux extrémités semblent donc s'arrêter sur l'écriture réseau sans plus lire. Le client russh y participe et notre application l'utilisera.</p>
+<h3>Client russh contre un vrai serveur OpenSSH 10.0 (VM Debian de test)</h3>
+<div class="table"><table>
+<tr><th>Cas (écho dans les deux sens)</th><th>Windows via tunnel Internet</th><th>Linux en boucle locale, sans tampon intermédiaire</th></tr>
+<tr><td>1 canal, 16 Mio</td><td><span class="t ok">3 réussis sur 3</span> (3,5 Mio/s)</td><td><span class="t ok">5 sur 5</span> (40 à 80 Mio/s)</td></tr>
+<tr><td>8 canaux, 256 Kio</td><td><span class="t ok">1 sur 1</span></td><td><span class="t ok">3 sur 3</span></td></tr>
+<tr><td>32 canaux, 256 Kio</td><td><span class="t ok">3 sur 3</span></td><td><span class="t ok">5 sur 5</span></td></tr>
+<tr><td>64 canaux, 256 Kio</td><td><span class="t ok">3 sur 3</span></td><td><span class="t ok">5 sur 5</span></td></tr>
+<tr><td>64 canaux, 1 Mio</td><td>Non testé</td><td><span class="t ok">3 sur 3</span> (41 à 75 Mio/s)</td></tr>
+<tr><td>1 canal, 256 Kio</td><td><span class="t ok">1 sur 1</span></td><td><span class="t ok">1 sur 1</span></td></tr>
+</table></div>
+<p><strong>Conclusion :</strong> les mêmes cas, dont ceux qui bloquaient toujours contre notre serveur russh, passent tous contre OpenSSH. Le blocage tient donc à l'appariement avec le serveur russh de test.</p>
+<p><strong>Limites :</strong> ce test ne porte que sur OpenSSH. Il n'a pas été refait depuis Android, ni contre un serveur Bitvise. Le blocage de l'APK à 64 canaux a été observé uniquement contre le serveur russh embarqué dans l'application de test.</p>
+<p class="sub">Limites : le client n'a pas encore été confronté à un vrai serveur OpenSSH ou Bitvise. La reconnexion automatique, les files de transfert et le miroir restent à écrire. Détails : <code>journal-dev/</code>.</p>
+
+<h2>Résultats sur tablette Android</h2>
+<p>Tablette RGPH-5, Android 12, ARM64. Banc en ligne de commande exécuté via <code>adb</code> en mode release, sur boucle locale, puis retiré de l'appareil.</p>
+<div class="wrap"><table>
+<tr><th>Élément</th><th>Résultat</th><th>État</th></tr>
+<tr><td>Compilation du cœur Rust pour ARM64</td><td>12 min 44 sur un cœur, binaire de 8 Mo, sans modification du code</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Banc release en ligne de commande</td><td>17 sur 17, dont les 64 canaux simultanés (622 ms)</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Tests OpenSSH</td><td>Non applicables : <code>ssh</code> et <code>sftp</code> sont absents de la tablette</td><td><span class="t warn">Sans objet</span></td></tr>
+<tr><td>Débits en boucle locale</td><td>SFTP : 18 Mio/s en envoi, 46 Mio/s en réception ; tunnel : 72 Mio/s</td><td><span class="t ok">Mesuré</span></td></tr>
+<tr><td>Application Tauri + Vite (APK de test, debug)</td><td>Compilée, 203 Mo, installée, processus démarré</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>Écran de l'APK</td><td>Affichage correct ; au défilement, le contenu passe sous la barre d'état Android</td><td><span class="t warn">À corriger</span></td></tr>
+<tr><td>Tests dans l'APK (debug)</td><td>16 sur 17 ; SFTP 6 Mio/s en envoi, 19 Mio/s en réception, tunnel 13 Mio/s</td><td><span class="t ok">Réussi</span></td></tr>
+<tr><td>64 canaux simultanés dans l'APK</td><td>Bloqué après 90 s, alors que le banc release passait sur la même tablette</td><td><span class="t bad">Échec</span></td></tr>
+</table></div>
+<p class="sub">Windows bloque le lien symbolique de Tauri hors mode développeur : la bibliothèque a été copiée, puis Gradle lancé directement. L'APK est volumineuse car c'est une version debug.</p>
+
+<h2>Reprise de YawREC</h2>
+<div class="wrap"><table>
+<tr><th>Élément</th><th>Reprise</th></tr>
+<tr><td>Barre des tâches</td><td>Application visible, réduction dans la barre, fermeture réelle</td></tr>
+<tr><td>Icônes cachées</td><td>Clic gauche : affiche la fenêtre. Clic droit : Afficher, action principale, Quitter</td></tr>
+<tr><td>Sortie</td><td>Retenue tant que l'activité n'est pas terminée proprement ; instance unique</td></tr>
+<tr><td>Autres plateformes</td><td>Linux : pas d'événement de clic gauche, menu seulement. macOS : barre de menus. Android : notification de service</td></tr>
+<tr><td>Design</td><td>Tokens et verre sombre de YawREC ; composants denses à créer</td></tr>
+</table></div>
+
+<h2>Suite</h2>
+<ol>
+<li>Refaire l'essai depuis l'application Android, et contre un serveur Bitvise SSH Server si la compatibilité avec celui-ci est visée.</li>
+<li>Compiler pour Linux et macOS, en CI.</li>
+<li>Produire les maquettes avec les prompts de <code>Cdesign/</code>.</li>
+<li>Construire le cœur, puis l'application desktop, puis Android.</li>
+</ol>
+</main>
+</body>
+</html>

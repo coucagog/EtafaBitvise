@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Écran Android</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--alerte); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  .non { color: var(--alerte); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : écran Android</h1>
+  <p class="sous">9 novembre 2026 · essais dans WebView2 sous Windows, à 390 × 844 px, tactile simulé · serveur : OpenSSH 10.0p2, Debian 13 (VM 102)</p>
+
+  <p class="bilan">L'application complète compile pour Android et son APK de débogage (217,7 Mo, arm64) est produite.
+  Elle est installée sur la tablette RGPH-5 (Android 12) et son premier lancement a fonctionné.
+  <strong>Après un arrêt forcé, la page reste noire</strong> ; le prototype se comporte de la même façon, et la cause profonde n'est pas identifiée.
+  <strong>Aucun parcours complet n'a encore été fait sur la tablette</strong>, et la correction du clavier virtuel n'est pas vérifiée.
+  La mise en page et les parcours ci-dessous ont été vérifiés dans la version Windows, en simulant un écran de téléphone.</p>
+
+  <h2>Construction</h2>
+  <table>
+    <tr><th>Étape</th><th>Résultat</th></tr>
+    <tr><td><code>svelte-check</code>, Vite, tests <code>mc-core</code></td><td class="ok">Réussi</td></tr>
+    <tr><td><code>cargo check</code> pour <code>aarch64-linux-android</code> (une erreur corrigée : fonction réservée au bureau)</td><td class="ok">Réussi</td></tr>
+    <tr><td>Bibliothèque native Android (220 Mo en débogage)</td><td class="ok">Réussi</td></tr>
+    <tr><td>Gradle, <code>assembleArm64Debug</code>, icônes MLS Connect incluses, permission INTERNET présente</td><td class="ok">Réussi</td></tr>
+    <tr><td>Installation sur la tablette RGPH-5 par <code>adb install -r</code></td><td class="ok">Réussi</td></tr>
+    <tr><td>Lancement : processus actif, fenêtre principale au premier plan, aucune erreur fatale dans les journaux après 8 s</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Parcours à 390 px contre le vrai serveur</h2>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Liste des profils, puis détail en plein écran avec retour</td><td class="ok">Réussi</td></tr>
+    <tr><td>Aucun débordement horizontal sur les écrans parcourus</td><td class="ok">Réussi</td></tr>
+    <tr><td>Connexion par clé, vérification de la clé d'hôte, shell</td><td class="ok">Réussi</td></tr>
+    <tr><td>Rangée de touches, au toucher simulé : Ctrl puis c interrompt <code>sleep</code> ; flèche haut rappelle la commande ; Tab complète</td><td class="ok">Réussi</td></tr>
+    <tr><td>Ctrl se relâche après une touche</td><td class="ok">Réussi</td></tr>
+    <tr><td>Le clavier virtuel reste ouvert après un appui sur la rangée : le focus reste dans le terminal à l'essai, mais la simulation n'émet pas les évènements souris d'un vrai toucher</td><td class="non">À confirmer sur la tablette</td></tr>
+    <tr><td>Hauteur réduite à 500 px : la navigation basse s'efface, les touches restent visibles</td><td class="ok">Réussi</td></tr>
+    <tr><td>Fichiers : un seul panneau, bascule Local/Distant, lignes de 48 px, sélection multiple, menu d'actions dans l'écran</td><td class="ok">Réussi</td></tr>
+    <tr><td>Tunnels : éditeur plein écran, tunnel créé et ouvert, affiché en carte</td><td class="ok">Réussi</td></tr>
+    <tr><td>Quitter ferme la session</td><td class="ok">Réussi</td></tr>
+  </table>
+
+  <h2>Corrigé pendant les essais</h2>
+  <ul>
+    <li>Les touches du terminal agissent dès l'appui, sans attendre un clic que l'annulation de <code>pointerdown</code> peut supprimer.</li>
+    <li>Les lignes du journal de connexion perdaient leur message, à cause d'une règle CSS prévue pour les fichiers.</li>
+    <li>L'éditeur de tunnel laissait voir l'écran derrière lui.</li>
+    <li>Une retouche avait cassé l'onglet Fichiers : la construction s'arrête désormais si les vérifications échouent.</li>
+  </ul>
+
+  <h2>Non vérifié, ou absent</h2>
+  <ul>
+    <li>Frappe humaine avec composition du clavier Gboard dans le terminal : les essais injectent le texte par rafales.</li>
+    <li>Écran éteint longtemps : aucun verrou de réveil, la veille profonde peut couper une session.</li>
+    <li>Android 13 et plus : demande de permission de notification non essayée, la tablette est sous Android 12.</li>
+    <li>Agent SSH : absent sur Android.</li>
+    <li>Les éléments de cette liste qui concernaient l'appui long, l'écran journal, la notification, le trousseau et <code>content://</code> sont réglés : voir les essais ci-dessous.</li>
+  </ul>
+  <h2>Essai réel complet sur la tablette, 9 novembre 2026, 16 h 50</h2>
+  <p>APK reconstruit, installé sur la RGPH-5 (Android 12), parcours en appuis réels contre OpenSSH sur la VM 102. L'écran noir signalé plus tôt ne s'est pas reproduit.</p>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Connexion, empreinte de la clé d'hôte identique à celle du serveur, shell ouvert</td><td class="ok">Réussi</td></tr>
+    <tr><td>Clavier virtuel : la page se réduit dans le formulaire et le terminal (962 à 593 px)</td><td class="ok">Réussi</td></tr>
+    <tr><td>Rangée de touches : Tab, Ctrl+C, flèche haut, clavier conservé</td><td class="ok">Réussi</td></tr>
+    <tr><td>Rafales de symboles sans caractère dupliqué, touche Effacer</td><td class="ok">Réussi, après correctif</td></tr>
+    <tr><td>SFTP : liste, sélection multiple, menu d'actions, appui long</td><td class="ok">Réussi</td></tr>
+    <tr><td>Tunnel local : le serveur répond à travers lui</td><td class="ok">Réussi</td></tr>
+    <tr><td>Déconnexion</td><td class="ok">Réussi</td></tr>
+  </table>
+  <p>Défaut corrigé pendant cet essai : des caractères saisis rapidement étaient dupliqués dans le terminal.</p>
+
+  <h2>Fonctions Android ajoutées, 9 novembre 2026, 17 h 45</h2>
+  <p>Mêmes conditions : appuis réels sur la tablette, serveur OpenSSH de la VM 102, clés et fichiers jetables, retirés après l'essai.</p>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Favoris : ajout, retour, retrait, menu dans l'écran</td><td class="ok">Réussi</td></tr>
+    <tr><td>Miroir serveur vers tablette : aperçu, contenus, second passage « Déjà à jour »</td><td class="ok">Réussi</td></tr>
+    <tr><td>Écran journal : affichage, recherche, sans débordement</td><td class="ok">Réussi</td></tr>
+    <tr><td>Notification : service au premier plan, 90 s en arrière-plan, session toujours active</td><td class="ok">Réussi</td></tr>
+    <tr><td>Appui sur la notification : retour à la même session</td><td class="ok">Réussi</td></tr>
+    <tr><td>Action « Se déconnecter » : session, service et notification fermés</td><td class="ok">Réussi</td></tr>
+    <tr><td>Keystore : secret enregistré, absent en clair du fichier</td><td class="ok">Réussi</td></tr>
+    <tr><td>Keystore : après arrêt complet, connexion sans rien saisir ; décocher efface le secret</td><td class="ok">Réussi</td></tr>
+    <tr><td>Import d'une clé par le sélecteur Android, puis connexion SSH avec elle</td><td class="ok">Réussi</td></tr>
+    <tr><td>Export de la clé publique et du journal vers les Téléchargements</td><td class="ok">Réussi</td></tr>
+    <tr><td>Import de fichier vers le panneau local, export, contenus identiques</td><td class="ok">Réussi</td></tr>
+    <tr><td>Second import du même nom : renommé, rien d'écrasé ; aucun temporaire restant</td><td class="ok">Réussi</td></tr>
+  </table>
+  <p>Anomalie vue une fois et non expliquée : à une relance, la demande de pseudo-terminal est restée 15 s sans réponse, alors que le serveur avait accepté la connexion. Elle ne s'est pas reproduite à l'essai suivant.</p>
+</main>
+</body>
+</html>

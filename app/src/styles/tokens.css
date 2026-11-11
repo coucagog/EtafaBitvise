@@ -1,0 +1,50 @@
+/* Tokens de la planche de composants Claude Design (Cdesign/exports/01). */
+:root {
+  --rec-500: #ef4444; --rec-600: #dc2626; --rec-700: #b91c1c; --rec-glow: rgba(239, 68, 68, 0.35);
+  --ok-500: #4ade80; --accent-blue: #60a5fa; --close-red: #c42b1c;
+  --text-primary: #f0f0f0; --text-secondary: #d8d8d8; --text-muted: #999999; --text-faint: #888888;
+  --font-sans: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+  --warn-500: #fbbf24; --danger-text: #f87171; --accent-blue-hover: #7cb5fb; --accent-blue-press: #4b93ef;
+  --accent-ink: #0b1526; --focus-ring: #93c5fd; --text-disabled: #6e6e6e;
+  --accent-blue-tint: rgba(96, 165, 250, 0.16); --accent-blue-line: rgba(96, 165, 250, 0.40);
+  --ok-tint: rgba(74, 222, 128, 0.12); --ok-line: rgba(74, 222, 128, 0.32);
+  --warn-tint: rgba(251, 191, 36, 0.12); --warn-line: rgba(251, 191, 36, 0.36);
+  --danger-tint: rgba(239, 68, 68, 0.12); --danger-line: rgba(239, 68, 68, 0.40);
+
+  --surface-window: linear-gradient(180deg, rgba(32, 32, 32, 0.92) 0%, rgba(24, 24, 24, 0.92) 100%);
+  --surface-window-opaque: #1c1c1c;
+  --surface-popover: rgba(14, 14, 16, 0.97); --surface-popover-opaque: #0e0e10;
+  --surface-sunken: rgba(0, 0, 0, 0.30);
+  --surface-1: rgba(255, 255, 255, 0.04); --surface-2: rgba(255, 255, 255, 0.07); --surface-3: rgba(255, 255, 255, 0.11);
+  --surface-field: rgba(255, 255, 255, 0.06); --surface-field-hover: rgba(255, 255, 255, 0.09);
+  --surface-terminal: #0c0c0c; --scrim: rgba(0, 0, 0, 0.50);
+
+  --border-subtle: rgba(255, 255, 255, 0.05); --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.18); --border-control: rgba(255, 255, 255, 0.42);
+
+  --blur-window: blur(40px) saturate(180%); --blur-popover: blur(16px);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-dialog: 0 24px 60px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.35);
+
+  --space-1: 2px; --space-2: 4px; --space-3: 6px; --space-4: 8px;
+  --space-5: 12px; --space-6: 16px; --space-7: 24px; --space-8: 32px;
+  --radius-xs: 3px; --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 12px; --radius-pill: 999px;
+
+  --control-h-sm: 26px; --control-h: 32px; --row-h: 28px; --titlebar-h: 32px; --footer-h: 28px;
+  /* Android : 48 px pour toute cible tactile (remplace les 44 px de la planche). */
+  --touch-min: 48px;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --surface-window: var(--surface-window-opaque); --surface-popover: var(--surface-popover-opaque);
+    --blur-window: none; --blur-popover: none;
+  }
+}
+
+:root[data-fallback="on"] {
+  --surface-window: var(--surface-window-opaque); --surface-popover: var(--surface-popover-opaque);
+  --blur-window: none; --blur-popover: none;
+}
