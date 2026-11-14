@@ -208,6 +208,7 @@
         {#if p.agent.niveau === 'exploitation'}
           <label class="etiquette-agent" for="f-agent-commandes">Commandes ajoutées, une par ligne</label>
           <textarea id="f-agent-commandes" class="champ mono" rows="3" placeholder="systemctl restart nginx" value={p.agent.commandes.join('\n')} oninput={(e) => { p.agent.commandes = lignes(e.currentTarget.value); changer() }}></textarea>
+          <small class="aide">Une commande ajoutée admet des arguments de plus. Pour les refuser, terminez la ligne par un signe égal : <span class="mono">systemctl restart nginx =</span></small>
         {/if}
         {#if p.agent.niveau !== 'aucun'}
           <small class="aide">L'agent passe par le programme mc-mcp. La clé d'hôte doit avoir été enregistrée ici, et le secret mémorisé dans le trousseau. Chaque demande est consignée dans agent.log.</small>
