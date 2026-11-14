@@ -27,7 +27,7 @@
   <p class="sous">14 novembre 2026 · Windows 11 Pro, WebView2 157.0.4341.60 · poste de développement</p>
 
   <p class="bilan">L'application Windows fonctionne et son installateur final est produit, avec <code>mc-mcp</code>. L'écran blanc apparu le 14 novembre ne venait ni du code ni de WebView2 : sur ce poste, un programme lancé depuis le dossier du projet tourne avec des droits réduits. Lancée depuis un autre dossier, l'application s'affiche normalement.
-  L'installateur n'a pas encore été exécuté.</p>
+  L'installateur a été exécuté sur ce poste : installation, lancement, puis désinstallation sans reste.</p>
 
   <h2>L'écran blanc</h2>
   <table>
@@ -56,7 +56,10 @@
     <tr><td>Accès agent depuis Claude Code vers un vrai serveur, niveaux 0 à 3</td><td class="ok">Réussi</td></tr>
     <tr><td>Installateur NSIS en mode final, avec <code>mc-mcp.exe</code></td><td class="ok">Construit</td></tr>
     <tr><td>Exécutable final, lancé hors du projet : page complète, console sans erreur</td><td class="ok">Réussi</td></tr>
-    <tr><td>Installateur exécuté : installation, raccourcis, désinstallation</td><td class="non">Non essayé</td></tr>
+    <tr><td>Installateur exécuté en mode silencieux : <code>mls-connect.exe</code>, <code>mc-mcp.exe</code> et désinstalleur posés, entrée « MLS Connect 0.1.0 » dans les programmes installés, raccourcis du menu Démarrer et du bureau</td><td class="ok">Réussi</td></tr>
+    <tr><td>Application installée : page complète, console sans erreur, journal écrit ; <code>mc-mcp.exe</code> installé répond</td><td class="ok">Réussi</td></tr>
+    <tr><td>Désinstallation silencieuse : dossier, entrée de registre et raccourcis retirés ; profils et cache de l'utilisateur conservés</td><td class="ok">Réussi</td></tr>
+    <tr><td>Installation par l'assistant graphique, à la main</td><td class="non">Non essayé</td></tr>
     <tr><td>Installateur MSI</td><td class="non">Non construit</td></tr>
   </table>
 
