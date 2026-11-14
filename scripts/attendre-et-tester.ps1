@@ -1,6 +1,6 @@
 # Attend l'autorisation du garde-fou, puis verifie et execute le banc de faisabilite.
 # Chaque etape repasse par le garde-fou. Abandon apres -MaxHeures sans autorisation.
-param([int]$MaxHeures = 12, [int]$PauseSec = 60, [switch]$DiagCanaux, [switch]$Android, [switch]$Apk, [switch]$Gradle, [switch]$Compiler, [switch]$App, [switch]$Exe, [switch]$Paquet, [switch]$Reel, [switch]$ApkApp, [switch]$GradleApp, [string]$Filtre = "")
+param([int]$MaxHeures = 12, [int]$PauseSec = 60, [switch]$DiagCanaux, [switch]$Android, [switch]$Apk, [switch]$Gradle, [switch]$Compiler, [switch]$App, [switch]$Exe, [switch]$Paquet, [switch]$Final, [switch]$Reel, [switch]$ApkApp, [switch]$GradleApp, [string]$Filtre = "")
 
 $racine = Split-Path $PSScriptRoot -Parent
 $garde = Join-Path $PSScriptRoot "garde-ressources.ps1"
@@ -88,11 +88,15 @@ if ($Exe) {
 }
 
 if ($Paquet) {
-    # Installateur NSIS de debogage, avec mc-mcp a cote de l'application. Paquet final : memes commandes sans --debug.
+    # Installateur NSIS avec mc-mcp a cote de l'application. Debogage par defaut ; -Final : mode final (long).
+    # Les scripts de construction (aws-lc-sys) tournent en integrite faible depuis target : sans dossier temporaire
+    # accessible, lib.exe echoue (1104). Meme dossier temporaire que pour les tests.
+    $mode = if ($Final) { "" } else { "--debug" }
+    $tmp = "(if not exist $racine\target\tmp-tests\ mkdir $racine\target\tmp-tests) && set TMP=$racine\target\tmp-tests&& set TEMP=$racine\target\tmp-tests&&"
     $front = Join-Path $racine "app"
     $etapes = @(
-        @{ Nom = "paquet-mc-mcp"; Log = "$journal\paquet-mc-mcp.log"; Cmd = "(cd /d $front && node scripts\sidecar.mjs --debug)" },
-        @{ Nom = "paquet-nsis"; Log = "$journal\paquet-nsis.log"; Cmd = "(cd /d $front && cargo tauri build --debug --bundles nsis --config src-tauri/tauri.paquets.conf.json)" }
+        @{ Nom = "paquet-mc-mcp"; Log = "$journal\paquet-mc-mcp.log"; Cmd = "(cd /d $front && $tmp node scripts\sidecar.mjs $mode)" },
+        @{ Nom = "paquet-nsis"; Log = "$journal\paquet-nsis.log"; Cmd = "(cd /d $front && $tmp cargo tauri build $mode --bundles nsis --config src-tauri/tauri.paquets.conf.json)" }
     )
 }
 

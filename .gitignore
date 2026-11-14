@@ -9,6 +9,8 @@ dist/
 *.deb
 *.AppImage
 dist-linux/
+dist-mac/
+dist-windows/
 *.log
 
 # mc-mcp préparé pour les paquets par app/scripts/sidecar.mjs
