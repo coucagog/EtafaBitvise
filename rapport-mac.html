@@ -55,12 +55,12 @@
   <h2>Paquet</h2>
   <table>
     <tr><th>Fichier, dans <code>livrables/macos/</code></th><th>Taille</th><th>SHA-256</th></tr>
-    <tr><td><code>MLS-Connect_0.1.0_universal.dmg</code></td><td>12,9 Mo</td><td><code>a22bdfd90ccd3745975efdcb9dddaf27a2abefc053025106c360dcbeb214b048</code></td></tr>
+    <tr><td><code>MLS-Connect_0.1.0_universal.dmg</code></td><td>12,9 Mo</td><td><code>21b3a0dea3ad9606505b99aecd063b4a80daa4090e5bece0f25f3482b7dfef12</code></td></tr>
   </table>
   <p>Pour Mac Intel et Apple Silicon. Non signé et non notarisé : après un téléchargement par navigateur, macOS refusera de l'ouvrir d'un double-clic ; passer par clic droit puis « Ouvrir ». <code>mc-mcp</code> se trouve dans <code>MLS Connect.app/Contents/MacOS/mc-mcp</code>.</p>
 
   <h2>Erreur rencontrée à la première connexion</h2>
-  <p>La première tentative a affiché « The key is encrypted ». La clé était protégée par une passphrase, qui n'avait pas été saisie : sur une nouvelle machine, le Keychain est vide. Une fois la passphrase saisie dans l'onglet Authentification, la connexion a réussi. Le message, repris tel quel de la bibliothèque SSH, a été remplacé par un texte en français qui indique où la saisir (commit a00b48d). Le paquet de <code>livrables/macos/</code> date d'avant et affiche encore l'ancien détail.</p>
+  <p>La première tentative a affiché « The key is encrypted ». La clé était protégée par une passphrase, qui n'avait pas été saisie : sur une nouvelle machine, le Keychain est vide. Une fois la passphrase saisie dans l'onglet Authentification, la connexion a réussi. Le message, repris tel quel de la bibliothèque SSH, a été remplacé par un texte en français qui indique où la saisir (commit a00b48d). Le paquet de <code>livrables/macos/</code> a été reconstruit ensuite avec ce texte ; cette nouvelle construction n'a pas été lancée, l'application en cours d'utilisation sur le Mac étant la précédente.</p>
 
   <h2>Comment il a été construit</h2>
   <ul>
