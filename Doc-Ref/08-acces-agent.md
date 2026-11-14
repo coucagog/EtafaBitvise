@@ -148,6 +148,21 @@ Script `journal-dev/outils-essais/niveaux.sh` et client `niveaux-essai.mjs` : 20
 - **Niveau 2**, vraie application Linux sous Xvfb, touches envoyées par `xdotool` : Entrée sur le focus initial refuse, et la commande n'est pas exécutée (témoin absent sur le serveur) ; Tab puis Entrée approuve, la commande s'exécute (code 0, effet constaté) ; commande sur plusieurs lignes ; Échap refuse ; lecture hors des dossiers refusée et dossier ouvert listé sans demande ; `agent.log` conforme. Annonce du guichet en droits 600.
 - Limites de cet essai : la fenêtre s'affiche en noir sous Xvfb pour le build de débogage (aucune capture exploitable ; l'aspect de la boîte est vérifié sous Windows). Arrêtée par un signal, l'application laisse son annonce ; elle est remplacée au démarrage suivant, et entre-temps `mc-mcp` refuse.
 
+## Essai depuis Claude Code sous Windows (14 novembre 2026)
+
+Claude Code 2.1.325, `mc-mcp.exe` déclaré par `claude mcp add`, application Windows ouverte, deux profils vers la VM 102 (compte `agent-mc`, clé d'essai sans passphrase créée dans l'application, tunnel local vers le port SSH de la VM). Une session Claude Code non interactive a enchaîné six demandes :
+
+| Demande | Résultat |
+|---|---|
+| `profils` | Deux profils décrits, niveaux 0 et 2 |
+| Niveau 0, `uptime` | Exécutée, code 0 |
+| Niveau 0, `rm -rf /tmp/x` | Refusée avant le serveur |
+| Niveau 0, lister `/var/log` | 15 entrées |
+| Niveau 0, lire `/etc/passwd` | Refusée : hors des dossiers ouverts |
+| Niveau 2, `id -un && hostname` | Affichée dans la fenêtre, approuvée, exécutée, code 0 |
+
+`agent.log` : cinq lignes conformes, dont `"approuvee": true` pour la dernière. Tout a été retiré ensuite : déclaration MCP, profils, clé, `known_hosts`, `agent.log`, autorisation de la clé sur la VM, tunnel. L'approbation a été cliquée par le pilotage de la fenêtre, pas à la main.
+
 ## Limites du prototype
 
 - Niveau 2 : l'application doit être ouverte sur le même poste et sous le même compte que `mc-mcp`. Pas d'approbation sur Android.
@@ -162,5 +177,5 @@ Script `journal-dev/outils-essais/niveaux.sh` et client `niveaux-essai.mjs` : 20
 - La déclaration est dans un fichier à part, `app/src-tauri/tauri.paquets.conf.json`, passé seulement à l'empaquetage. Raison : Tauri exige la présence du fichier annexe dès la compilation ; dans la configuration principale, il casserait `cargo check`, les tests, Android et la construction sans paquet.
 - Préparation : `node scripts/sidecar.mjs` depuis `app` (construit `mc-mcp` en mode final et le copie dans `src-tauri/binaries/`, sous le nom du triplet de la cible ; `--debug` et `--target` existent). Dossier ignoré par git.
 - Empaquetage : `cargo tauri build --config src-tauri/tauri.paquets.conf.json`.
-- Garde-fou Windows : `scripts/attendre-et-tester.ps1 -Paquet` (installateur NSIS de débogage). CI : une étape par système (NSIS, `.deb`, `.app`).
-- Vérifié sous Windows le 14 novembre 2026 : installateur NSIS construit, `mc-mcp.exe` présent dans son script d'installation et de désinstallation. Installateur non exécuté. Linux, même jour, sur la VM 102 : `.deb` et AppImage construits en mode final, `mc-mcp` présent dans les deux, `/usr/bin/mc-mcp` installé, lancé, puis retiré avec le paquet. macOS : non vérifié avant le prochain passage de la CI.
+- Garde-fou Windows : `scripts/attendre-et-tester.ps1 -Paquet` (installateur NSIS de débogage). CI : une étape par système (NSIS, `.deb`, `.app`), en mode débogage.
+- Vérifié sous Windows le 14 novembre 2026 : installateur NSIS construit, `mc-mcp.exe` présent dans son script d'installation et de désinstallation. Installateur non exécuté. Linux, même jour, sur la VM 102 : `.deb` et AppImage construits en mode final, `mc-mcp` présent dans les deux, `/usr/bin/mc-mcp` installé, lancé, puis retiré avec le paquet. CI du 14 novembre 2026 (run 43587980590), verte sur les trois systèmes : installateur NSIS, `.deb` et `MLS Connect.app` construits avec `mc-mcp`. Le paquet macOS n'a pas été ouvert sur un Mac.

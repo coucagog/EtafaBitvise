@@ -55,6 +55,7 @@
     <tr><td>Niveau 2 : mauvais jeton écarté sans affichage ; demande retirée si l'agent abandonne ; annonce retirée à la fermeture</td><td class="ok">Réussi</td></tr>
     <tr><td>Niveau 2, vrai <code>mc-mcp</code> : refus si l'application est fermée, refus de l'utilisateur, accord puis connexion tentée, caractère de sens d'écriture refusé</td><td class="ok">Réussi</td></tr>
     <tr><td>Niveau 2, VM 102, vraie application Linux : refus sans exécution, accord puis exécution constatée sur le serveur, commande sur plusieurs lignes, Échap</td><td class="ok">Réussi</td></tr>
+    <tr><td>Depuis Claude Code sous Windows vers la VM 102 : profils, commande admise, commande et lecture refusées, dossier listé, commande de niveau 2 approuvée dans la fenêtre puis exécutée</td><td class="ok">Réussi</td></tr>
     <tr><td>Niveau 1, VM 102, <code>sudoers</code> limité à une commande : commande ajoutée exécutée ; autre service, enchaînement et argument de plus refusés (par le filtre ou par <code>sudoers</code>)</td><td class="ok">Réussi</td></tr>
   </table>
   <p>Défaut trouvé et corrigé pendant les essais : un caractère nul dans une commande faisait couper toute la connexion par OpenSSH. Il est maintenant refusé avant l'envoi, à tous les niveaux.</p>
@@ -80,8 +81,7 @@ claude mcp add mls-connect -- "C:\…\EtafaBitvise\target\release\mc-mcp.exe"</p
   <h2>Non fait</h2>
   <ul>
     <li>Niveau 2 : pas d'approbation sur Android ; aspect de la boîte non vérifié sous Linux (écran virtuel noir), ni sous macOS.</li>
-    <li><code>mc-mcp</code> est inclus dans l'installateur Windows (construit, non exécuté). Il est aussi dans les paquets Linux de <code>dist-linux</code>, refaits et essayés sur la VM 102 (<code>/usr/bin/mc-mcp</code> pour le <code>.deb</code>). Paquet macOS : à vérifier au prochain passage de la CI.</li>
-    <li>Essai depuis Windows vers un vrai serveur et depuis Claude Code lui-même.</li>
+    <li><code>mc-mcp</code> est inclus dans l'installateur Windows (construit, non exécuté). Il est aussi dans les paquets Linux de <code>dist-linux</code>, refaits et essayés sur la VM 102 (<code>/usr/bin/mc-mcp</code> pour le <code>.deb</code>). Paquet macOS : construit par la CI avec <code>mc-mcp</code>, jamais ouvert sur un Mac.</li>
   </ul>
   <p>Détails : <code>Doc-Ref/08-acces-agent.md</code>.</p>
 </main>
