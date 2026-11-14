@@ -26,8 +26,8 @@
   <h1>MLS Connect : version macOS</h1>
   <p class="sous">14 novembre 2026 · construite et lancée sur un iMac Pro Intel (Xeon W-2140B, 32 Go), macOS 15.7.3 · préparée le 11 novembre sans Mac</p>
 
-  <p class="bilan">L'application compile sous macOS, son cœur passe tous les tests, et le paquet <code>.dmg</code> final pour Mac Intel est produit, avec <code>mc-mcp</code>. Lancée depuis ce paquet, l'application démarre et reste ouverte.
-  Son interface n'a pas encore été regardée : je n'ai ni capture ni pilotage de la fenêtre sur le Mac. Aucun paquet final n'existe pour Apple Silicon.</p>
+  <p class="bilan">L'application compile sous macOS, son cœur passe tous les tests, et le paquet <code>.dmg</code> final est produit, universel (Mac Intel et Apple Silicon), avec <code>mc-mcp</code>. Lancée depuis ce paquet, l'application démarre et reste ouverte.
+  Son interface n'a pas encore été regardée : je n'ai ni capture ni pilotage de la fenêtre sur le Mac. La partie Apple Silicon du paquet n'a jamais été lancée : il faudrait un Mac de ce type.</p>
 
   <h2>Résultats</h2>
   <table>
@@ -47,20 +47,22 @@
     <tr><td>Effet des raccourcis globaux</td><td class="non">Non vérifié</td></tr>
     <tr><td>Connexion SSH réelle, terminal, SFTP, tunnels depuis le Mac</td><td class="non">Non essayé</td></tr>
     <tr><td>Keychain, agent SSH, sélecteurs de fichiers, copier-coller</td><td class="non">Non essayé</td></tr>
-    <tr><td>Paquet final pour Apple Silicon, ou universel</td><td class="non">Non construit</td></tr>
+    <tr><td>Paquet universel : <code>mls-connect</code> et <code>mc-mcp</code> contiennent tous deux <code>x86_64</code> et <code>arm64</code> ; application lancée sur le Mac Intel</td><td class="ok">Réussi</td></tr>
+    <tr><td>Paquet universel lancé sur un Mac Apple Silicon</td><td class="non">Non essayé</td></tr>
   </table>
 
   <h2>Paquet</h2>
   <table>
     <tr><th>Fichier, dans <code>livrables/macos/</code></th><th>Taille</th><th>SHA-256</th></tr>
-    <tr><td><code>MLS-Connect_0.1.0_x64.dmg</code></td><td>6,9 Mo</td><td><code>1f45e1707058310376e2a4baee80922d96ec1c5a7e3b2d98b6d599a3df27bbf6</code></td></tr>
+    <tr><td><code>MLS-Connect_0.1.0_universal.dmg</code></td><td>12,9 Mo</td><td><code>a22bdfd90ccd3745975efdcb9dddaf27a2abefc053025106c360dcbeb214b048</code></td></tr>
   </table>
-  <p>Pour Mac Intel seulement. Non signé et non notarisé : après un téléchargement par navigateur, macOS refusera de l'ouvrir d'un double-clic ; passer par clic droit puis « Ouvrir ». <code>mc-mcp</code> se trouve dans <code>MLS Connect.app/Contents/MacOS/mc-mcp</code>.</p>
+  <p>Pour Mac Intel et Apple Silicon. Non signé et non notarisé : après un téléchargement par navigateur, macOS refusera de l'ouvrir d'un double-clic ; passer par clic droit puis « Ouvrir ». <code>mc-mcp</code> se trouve dans <code>MLS Connect.app/Contents/MacOS/mc-mcp</code>.</p>
 
   <h2>Comment il a été construit</h2>
   <ul>
     <li>Tout est dans <code>~/mc-mac</code> sur le Mac : sources, Rust, Node 22, <code>tauri-cli</code>. Supprimer ce dossier retire tout. Rien n'a été installé ailleurs ; les outils de ligne de commande d'Xcode étaient déjà présents.</li>
     <li>Script <code>mac.sh</code> : vérification de l'interface, tests, <code>node scripts/sidecar.mjs</code>, puis <code>cargo tauri build --config src-tauri/tauri.paquets.conf.json</code>. Compilation finale : 2 minutes pour <code>mc-mcp</code>, 6 pour l'application.</li>
+    <li>Paquet universel, script <code>mac-universel.sh</code> : cible <code>aarch64-apple-darwin</code> ajoutée à Rust, <code>mc-mcp</code> compilé pour les deux architectures puis réuni par <code>lipo</code>, et <code>cargo tauri build --target universal-apple-darwin</code>. Environ 15 minutes.</li>
     <li>Accès par SSH avec une clé créée pour cet essai, que vous avez autorisée vous-même sur le Mac.</li>
   </ul>
 
