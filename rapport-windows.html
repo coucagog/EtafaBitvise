@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Version Windows</title>
+<style>
+  :root { color-scheme: dark; --fond: #181818; --carte: #232323; --ligne: #383838; --texte: #e6e6e6; --attenue: #a3a3a3; --ok: #4ade80; --alerte: #fbbf24; }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.55 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 56px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 10px; }
+  .sous { color: var(--attenue); margin: 0 0 24px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
+  th { color: var(--attenue); font-weight: 600; font-size: 13px; }
+  .ok { color: var(--ok); white-space: nowrap; }
+  .non { color: var(--alerte); white-space: nowrap; }
+  code { font: 13px Consolas, ui-monospace, monospace; overflow-wrap: anywhere; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MLS Connect : version Windows</h1>
+  <p class="sous">14 novembre 2026 · Windows 11 Pro, WebView2 157.0.4341.60 · poste de développement</p>
+
+  <p class="bilan">L'application Windows fonctionne et son installateur final est produit, avec <code>mc-mcp</code>. L'écran blanc apparu le 14 novembre ne venait ni du code ni de WebView2 : sur ce poste, un programme lancé depuis le dossier du projet tourne avec des droits réduits. Lancée depuis un autre dossier, l'application s'affiche normalement.
+  L'installateur n'a pas encore été exécuté.</p>
+
+  <h2>L'écran blanc</h2>
+  <table>
+    <tr><th>Constat</th><th>Ce qu'il montre</th></tr>
+    <tr><td>Le moteur WebView2 lancé seul démarre ; un hôte WebView2 indépendant aussi</td><td>Le moteur n'est pas en cause</td></tr>
+    <tr><td>Le même <code>mls-connect.exe</code>, copié hors du projet, s'affiche ; une copie renommée dans <code>target\debug</code> échoue</td><td>L'emplacement compte, pas le programme</td></tr>
+    <tr><td><code>icacls</code> sur le dossier du projet : « Niveau obligatoire faible », hérité par tous les fichiers</td><td>Étiquette d'intégrité faible, très probablement posée par le bac à sable de l'agent</td></tr>
+    <tr><td>Une copie de <code>whoami.exe</code> placée dans <code>target\debug</code> annonce « Niveau obligatoire faible »</td><td>Windows lance en intégrité faible tout programme situé dans le projet</td></tr>
+  </table>
+  <p>En intégrité faible, l'application ne peut écrire ni dans <code>%TEMP%</code> ni dans le cache WebView2 : la création de la vue échoue (0x800700AA avec le cache existant, 0x8000FFFF avec un cache neuf) et la fenêtre reste blanche. La même cause empêchait les tests d'écrire dans <code>%TEMP%</code>, et a fait échouer une première construction en mode final.</p>
+
+  <h2>Ce qui a été fait</h2>
+  <ul>
+    <li><code>scripts\lancer.cmd</code> copie l'exécutable de débogage vers <code>%LOCALAPPDATA%\mls-connect-essai</code> et le lance de là. <code>scripts\lancer-inspection.cmd</code> fait de même avec l'inspection WebView2 sur 127.0.0.1:9333.</li>
+    <li>Le garde-fou donne aux tests et aux constructions de paquets un dossier temporaire dans <code>target</code>.</li>
+    <li>L'application installée n'est pas concernée : elle ne vit pas dans le dossier du projet.</li>
+  </ul>
+
+  <h2>Résultats</h2>
+  <table>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Tests du cœur (64) et de <code>mc-mcp</code>, interface (0 erreur), application construite</td><td class="ok">Réussi</td></tr>
+    <tr><td>Démarrage par <code>lancer.cmd</code>, avec le cache réel : page complète, console sans erreur, journal de nouveau écrit</td><td class="ok">Réussi</td></tr>
+    <tr><td>Fenêtre d'export et d'import de profils, parcours piloté dans l'exécutable</td><td class="ok">Réussi</td></tr>
+    <tr><td>Approbation d'une commande d'agent (niveau 2), parcours piloté dans l'exécutable</td><td class="ok">Réussi</td></tr>
+    <tr><td>Accès agent depuis Claude Code vers un vrai serveur, niveaux 0 à 3</td><td class="ok">Réussi</td></tr>
+    <tr><td>Installateur NSIS en mode final, avec <code>mc-mcp.exe</code></td><td class="ok">Construit</td></tr>
+    <tr><td>Exécutable final, lancé hors du projet : page complète, console sans erreur</td><td class="ok">Réussi</td></tr>
+    <tr><td>Installateur exécuté : installation, raccourcis, désinstallation</td><td class="non">Non essayé</td></tr>
+    <tr><td>Installateur MSI</td><td class="non">Non construit</td></tr>
+  </table>
+
+  <h2>Installateur</h2>
+  <table>
+    <tr><th>Fichier, dans <code>dist-windows/</code></th><th>Taille</th><th>SHA-256</th></tr>
+    <tr><td><code>MLS-Connect_0.1.0_x64-setup.exe</code></td><td>4,2 Mo</td><td><code>17db002cfd9068580980305ff491048fe1f3fd496266b1bdfa3642d227739d58</code></td></tr>
+  </table>
+  <p>Installation pour le compte courant, dans <code>%LOCALAPPDATA%\MLS Connect</code>, avec <code>mc-mcp.exe</code> à côté de l'application. Non signé : Windows affichera un avertissement SmartScreen. Pour le refaire : <code>scripts\attendre-et-tester.ps1 -Paquet -Final</code>, environ 45 minutes sur ce poste.</p>
+
+  <h2>À savoir</h2>
+  <ul>
+    <li>Ne lancez pas un exécutable depuis le dossier du projet : <code>cargo run</code> et <code>cargo tauri dev</code> donnent le même écran blanc. Passez par <code>scripts\lancer.cmd</code>.</li>
+    <li>L'étiquette du dossier n'a pas été retirée : le bac à sable la remettrait sans doute. La retirer reste votre décision.</li>
+    <li>La réinstallation de WebView2 faite pendant le diagnostic était inutile ; elle est sans effet sur le reste du poste.</li>
+  </ul>
+</main>
+</body>
+</html>
