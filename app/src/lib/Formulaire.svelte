@@ -40,6 +40,7 @@
     ['aucun', 'Aucun', 'Profil invisible pour les agents.'],
     ['lecture', '0 · Lecture', 'Commandes de consultation (état, services, journaux) et lecture des fichiers dans les dossiers ci-dessous.'],
     ['exploitation', '1 · Exploitation', 'Comme la lecture, plus les commandes ajoutées ci-dessous, avec leurs arguments.'],
+    ['encadre', '2 · Shell encadré', "Toute commande, mais chacune s'affiche ici et attend votre accord : MLS Connect doit être ouvert. Fichiers : dossiers ci-dessous seulement."],
     ['complet', '3 · Accès complet', "Toute commande, tout fichier, sans approbation. Réservé à vos serveurs d'essai : les droits du compte sur le serveur sont la seule limite."],
   ]
   const lignes = (texte: string) => texte.split('\n').map((l) => l.trim()).filter(Boolean)
@@ -198,10 +199,9 @@
       <div class="colonne agent">
         <select class="champ limite" aria-label="Niveau d'accès d'un agent" bind:value={p.agent.niveau} onchange={changer}>
           {#each NIVEAUX as [id, libelle]}<option value={id}>{libelle}</option>{/each}
-          <option value="encadre" disabled>2 · Shell encadré (à venir)</option>
         </select>
         <small class="aide" class:danger={p.agent.niveau === 'complet'}>{NIVEAUX.find(([id]) => id === p.agent.niveau)?.[2] ?? ''}</small>
-        {#if p.agent.niveau === 'lecture' || p.agent.niveau === 'exploitation'}
+        {#if p.agent.niveau === 'lecture' || p.agent.niveau === 'exploitation' || p.agent.niveau === 'encadre'}
           <label class="etiquette-agent" for="f-agent-dossiers">Dossiers lisibles, un par ligne</label>
           <textarea id="f-agent-dossiers" class="champ mono" rows="3" placeholder="/var/log" value={p.agent.dossiers.join('\n')} oninput={(e) => { p.agent.dossiers = lignes(e.currentTarget.value); changer() }}></textarea>
         {/if}

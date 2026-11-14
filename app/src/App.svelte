@@ -1,6 +1,7 @@
 <script lang="ts">
   import { listen } from '@tauri-apps/api/event'
   import { ArrowLeft, File, KeyRound, RotateCcw, Server, ShieldCheck, CircleX } from '@lucide/svelte'
+  import ApprobationAgent from './lib/ApprobationAgent.svelte'
   import BarreTitre from './lib/BarreTitre.svelte'
   import ClesVue from './lib/ClesVue.svelte'
   import HotesVue from './lib/HotesVue.svelte'
@@ -184,6 +185,9 @@
   <Dialogues />
 </div>
 {/if}
+
+<!-- Hors de la fenêtre des profils : une demande d'agent peut arriver pendant une session. -->
+{#if !app.capacites.mobile}<ApprobationAgent />{/if}
 
 <style>
   .fenetre {

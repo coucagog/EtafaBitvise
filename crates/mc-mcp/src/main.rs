@@ -14,6 +14,7 @@ use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use mc_core::agent::{Niveau, DELAI_DEFAUT, DELAI_MAX, TAILLE_SORTIE_MAX};
+use mc_core::approbation::{self, Demande, Verdict};
 use mc_core::connexion::{connecter_par, Decisions, Evenement, Rappel, Session};
 use mc_core::hotes::MagasinHotes;
 use mc_core::profils::{MagasinProfils, MethodeAuth, Profil};
@@ -183,7 +184,11 @@ fn decrire(p: &Profil) -> Value {
         "serveur": format!("{}@{}:{}", p.utilisateur, p.hote, p.port),
         "niveau": a.niveau.numero(),
         "libelle": a.niveau.libelle(),
-        "commandes": if a.niveau == Niveau::Complet { json!("toutes") } else { json!(a.commandes_admises()) },
+        "commandes": match a.niveau {
+            Niveau::Complet => json!("toutes"),
+            Niveau::Encadre => json!("toutes, chacune approuvée par l'utilisateur dans MLS Connect, qui doit être ouvert"),
+            _ => json!(a.commandes_admises()),
+        },
         "dossiers": if a.niveau == Niveau::Complet { json!("tous") } else { json!(a.dossiers) },
         "notes": p.notes,
     })
@@ -228,17 +233,39 @@ async fn executer(etat: &mut Etat, args: &Value) -> Reponse {
         etat.journaliser(json!({ "profil": profil.nom, "niveau": niveau, "outil": "executer", "commande": commande, "decision": "refusee", "raison": raison }));
         return Reponse::refus(raison);
     }
+    // Niveau 2 : l'utilisateur voit la commande dans MLS Connect et l'approuve, avant toute connexion.
+    let approuvee = profil.agent.approbation_requise();
+    if approuvee {
+        let demande = Demande {
+            profil: profil.nom.clone(),
+            serveur: format!("{}@{}:{}", profil.utilisateur, profil.hote, profil.port),
+            commande: commande.clone(),
+        };
+        let raison = match approbation::demander(&etat.dossier, &demande).await {
+            Ok(Verdict::Approuvee) => None,
+            Ok(Verdict::Refusee) => Some("L'utilisateur a refusé cette commande dans MLS Connect.".to_string()),
+            Ok(Verdict::Expiree) => Some(format!(
+                "L'utilisateur n'a pas répondu dans MLS Connect en {} s : commande non exécutée.",
+                approbation::DELAI_REPONSE.as_secs()
+            )),
+            Err(e) => Some(e),
+        };
+        if let Some(raison) = raison {
+            etat.journaliser(json!({ "profil": profil.nom, "niveau": niveau, "outil": "executer", "commande": commande, "decision": "refusee", "raison": raison }));
+            return Reponse::refus(raison);
+        }
+    }
     let session = match etat.session(&profil, &tous).await {
         Ok(s) => s,
         Err(e) => {
-            etat.journaliser(json!({ "profil": profil.nom, "niveau": niveau, "outil": "executer", "commande": commande, "decision": "echec", "raison": e }));
+            etat.journaliser(json!({ "profil": profil.nom, "niveau": niveau, "outil": "executer", "commande": commande, "decision": "echec", "raison": e, "approuvee": approuvee }));
             return Reponse::refus(e);
         }
     };
     match session.executer(&commande, delai).await {
         Ok(r) => {
             etat.journaliser(json!({
-                "profil": profil.nom, "niveau": niveau, "outil": "executer", "commande": commande, "decision": "executee",
+                "profil": profil.nom, "niveau": niveau, "outil": "executer", "commande": commande, "decision": "executee", "approuvee": approuvee,
                 "code": r.code, "dureeMs": r.duree_ms, "octets": r.sortie.len() + r.erreurs.len(), "tronquee": r.tronquee, "expiree": r.expiree,
             }));
             let mut t = format!(

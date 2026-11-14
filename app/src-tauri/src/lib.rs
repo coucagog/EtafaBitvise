@@ -1,3 +1,4 @@
+mod approbation;
 mod commandes;
 #[cfg(desktop)]
 mod barre;
@@ -86,6 +87,8 @@ pub fn run() {
             commandes::sftp_transferer,
             commandes::transfert_pause,
             commandes::transfert_annuler,
+            approbation::agent_demandes,
+            approbation::agent_repondre,
             commandes::afficher_fenetre,
             commandes::quitter,
         ])
@@ -107,8 +110,10 @@ pub fn run() {
                 tunnels: tokio::sync::Mutex::new(HashMap::new()),
                 ftp: Mutex::new(None),
             }));
+            app.manage(Arc::new(approbation::Attentes::default()));
             #[cfg(desktop)]
             {
+                approbation::demarrer(app.handle(), dossier.clone());
                 barre::enregistrer_raccourcis(app.handle());
                 if let Err(e) = barre::installer(app.handle()) {
                     log::warn!("icône de la barre désactivée : {e}");
@@ -130,6 +135,14 @@ pub fn run() {
             #[cfg(mobile)]
             let _ = (fenetre, evenement);
         })
-        .run(tauri::generate_context!())
-        .expect("MLS Connect : erreur au lancement");
+        .build(tauri::generate_context!())
+        .expect("MLS Connect : erreur au lancement")
+        .run(|app, evenement| {
+            // `exit` termine le processus sans libérer le guichet : son annonce est retirée ici.
+            if let tauri::RunEvent::Exit = evenement {
+                if let Ok(dossier) = app.path().app_config_dir() {
+                    let _ = std::fs::remove_file(dossier.join(mc_core::approbation::FICHIER));
+                }
+            }
+        });
 }

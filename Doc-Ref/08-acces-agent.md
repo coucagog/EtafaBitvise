@@ -1,6 +1,6 @@
 # Accès d'un agent aux serveurs par MLS Connect
 
-Étude et prototype, 14 novembre 2026.
+Étude et prototype, 14 novembre 2026. Niveau 2 ajouté le même jour.
 
 ## Question
 
@@ -17,7 +17,8 @@ Les règles de MLS Connect filtrent les demandes de l'agent, mais **la vraie lim
 | Voie | Pour | Contre | Choix |
 |---|---|---|---|
 | MCP sur stdio, programme `mc-mcp` | Outils typés, décrits à l'agent ; règles par profil ; journal ; standard pris en charge par Claude Code et d'autres clients | Un programme de plus à installer | **Retenue** |
-| MCP en HTTP local, servi par l'application ouverte | Approbation de chaque commande dans la fenêtre (niveau 2) ; sessions visibles | L'application doit être ouverte ; un port local à protéger (jeton) | Plus tard, pour le niveau 2 |
+| `mc-mcp` demande l'accord à l'application ouverte, par un canal local | Un seul serveur MCP pour tous les niveaux ; l'application n'exécute rien, elle affiche et répond | L'application doit être ouverte ; un port local protégé par un jeton | **Retenue pour le niveau 2** |
+| MCP en HTTP local, servi par l'application ouverte | Sessions de l'agent visibles dans la fenêtre | Second serveur MCP à écrire et à déclarer ; l'application doit être ouverte | Écartée : le canal local suffit à l'approbation |
 | Ligne de commande `mls-connect --exec profil "commande"` | Très simple | Pas de description des outils ni de résultat structuré | Écartée |
 | `ssh` direct avec une clé dédiée | Existe déjà | Ni trousseau, ni règles par profil, ni journal commun ; secret à confier à l'agent | Écartée |
 
@@ -51,7 +52,7 @@ Le niveau se règle dans le profil : Options, « Accès d'un agent ». Il est en
 | Aucun | Rien : le profil lui est invisible | | Fait |
 | **0 · Lecture** | Commandes d'une liste fermée de consultation ; lister et lire dans les dossiers ouverts du profil | Compte dédié sans sudo ; clé `restrict` et `from=` | **Fait, essayé** |
 | 1 · Exploitation | Niveau 0, plus les commandes ajoutées par l'utilisateur, avec leurs arguments | Compte dédié ; `sudoers` limité à ces commandes exactes | Fait, non essayé sur un serveur réel |
-| 2 · Shell encadré | Toute commande, chacune approuvée par l'utilisateur | Compte dédié | À venir (approbation dans l'application) |
+| **2 · Shell encadré** | Toute commande, chacune approuvée par l'utilisateur dans MLS Connect ouvert ; lister et lire dans les dossiers ouverts du profil | Compte dédié | **Fait** ; approbation essayée sous Windows, exécution après accord non essayée sur un serveur réel |
 | **3 · Accès complet** | Toute commande, tout fichier, sans approbation | Serveurs d'essai seulement ; les droits du compte sont la seule limite | **Fait, essayé** |
 
 ### Règles des niveaux 0 et 1
@@ -61,6 +62,23 @@ Le niveau se règle dans le profil : Options, « Accès d'un agent ». Il est en
 - Aucune commande de la liste ne prend un chemin de fichier : **les fichiers se lisent par `lister` et `lire`, limités aux dossiers ouverts**.
 - Arguments refusés même sur une commande admise : suivi sans fin (`-f`, `--follow`) et options d'écriture de `journalctl` (`--vacuum-*`, `--rotate`, `--flush`…).
 - **Chemins** : le serveur donne la forme canonique (liens symboliques et `..` résolus), puis elle est comparée aux dossiers ouverts. Un lien de `/var/log` vers `/etc/passwd` est donc refusé.
+
+### Niveau 2 : approbation dans l'application
+
+```
+mc-mcp ── commande ──▶ 127.0.0.1:port (jeton) ──▶ MLS Connect : boîte « Approuver / Refuser »
+mc-mcp ◀── approuvée, refusée ou expirée ──────── choix de l'utilisateur
+```
+
+- Au démarrage, l'application (bureau) écoute sur la boucle locale, sur un port libre, et dépose `agent-approbation.json` (port et jeton aléatoire de 256 bits) dans son dossier de données. Le fichier est retiré à la fermeture ; un fichier resté après un arrêt brutal mène à un refus.
+- `mc-mcp` envoie le profil, le serveur et la commande. L'application passe au premier plan et affiche la commande entière, telle qu'elle sera exécutée. Le focus est sur **Refuser** ; Échap vaut refus.
+- Sans réponse en 120 s : refus. Application fermée : refus, avec un message qui demande de l'ouvrir. Huit demandes en attente au plus.
+- Si `mc-mcp` abandonne (client MCP arrêté), la demande disparaît de l'écran.
+- La commande doit s'afficher telle quelle : caractères de contrôle (sauf saut de ligne et tabulation), caractères invisibles et marques de sens d'écriture sont refusés avant l'affichage.
+- L'accord vaut pour une commande, une fois. Rien n'est mémorisé.
+- `lister` et `lire` suivent la règle du niveau 0 (dossiers ouverts), sans demande d'accord.
+- `agent.log` : la commande refusée porte la raison ; la commande exécutée porte `"approuvee": true`.
+- Limite : le jeton écarte un autre compte du poste, pas un programme du même compte. Un agent qui a aussi un terminal sur le poste peut se passer de `mc-mcp` (voir Risques) : la limite reste le compte sur le serveur.
 
 ### Règles communes à tous les niveaux
 
@@ -77,6 +95,7 @@ Le niveau se règle dans le profil : Options, « Accès d'un agent ». Il est en
 | L'agent contourne `mc-mcp` : il a aussi un terminal sur le poste, et peut lire une clé non protégée | Limiter le compte sur le serveur, pas seulement le profil. Protéger la clé par une passphrase gardée dans le trousseau. |
 | Injection : un journal ou un fichier du serveur contient des instructions destinées à l'agent | Niveau 0 par défaut ; avertissement dans chaque réponse ; écritures possibles seulement aux niveaux 1 et 3, choisis par l'utilisateur. |
 | Tout ce que l'agent lit part chez le fournisseur du modèle | Ne pas ouvrir de dossiers contenant des secrets ; un compte dédié ne lit pas les fichiers protégés. |
+| Commande approuvée sans être lue, au niveau 2 | Commande affichée en entier, focus sur Refuser, aucun accord mémorisé. Préférer le niveau 1 pour des gestes répétés. |
 | Commande destructrice au niveau 3 | Réservé aux serveurs d'essai. Claude Code demande l'accord avant chaque appel d'outil, sauf autorisation permanente : ne pas l'accorder pour `executer` sur un profil de niveau 3. |
 | Commande sans fin | Délai de 30 s par défaut, 600 s au plus : le canal est fermé, la session reste utilisable. |
 
@@ -113,7 +132,7 @@ Compte `agent-mc` sans sudo, clé `restrict,from="127.0.0.1,::1"`, profils de ni
 
 ## Limites du prototype
 
-- Niveau 2 non fait : il faut une approbation dans l'application ouverte. Voie prévue : l'application sert MCP en HTTP local, avec un jeton, et affiche chaque commande à approuver.
+- Niveau 2 : l'application doit être ouverte sur le même poste et sous le même compte que `mc-mcp`. Pas d'approbation sur Android.
 - Pas de session interactive (terminal) pour l'agent : commandes uniques seulement.
 - Aucun outil d'écriture de fichiers : au niveau 3, passer par une commande.
 - `mc-mcp` n'est pas encore livré dans les paquets : il se construit avec `cargo build -p mc-mcp --release`.

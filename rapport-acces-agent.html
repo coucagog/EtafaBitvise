@@ -25,7 +25,7 @@
 <body>
 <main>
   <h1>MLS Connect : accès d'un agent</h1>
-  <p class="sous">14 novembre 2026 · étude et prototype · essayé sur la VM 102 (Debian 13)</p>
+  <p class="sous">14 novembre 2026 · étude et prototype · essayé sur la VM 102 (Debian 13) ; approbation du niveau 2 essayée sous Windows</p>
 
   <p class="bilan">Un agent comme Claude Code peut se connecter à un serveur par MLS Connect, avec un profil que vous lui ouvrez et un niveau d'accès choisi.
   Il passe par <code>mc-mcp</code>, un serveur MCP qui réutilise le cœur de l'application. L'agent désigne le profil par son nom, sans jamais voir ni la clé ni la passphrase, et la clé d'hôte est vérifiée.
@@ -36,7 +36,7 @@
     <tr><th>Niveau</th><th>L'agent peut</th><th>État</th></tr>
     <tr><td>0 · Lecture</td><td>Commandes de consultation d'une liste fermée ; lister et lire dans les dossiers ouverts</td><td class="ok">Essayé</td></tr>
     <tr><td>1 · Exploitation</td><td>Niveau 0, plus les commandes que vous ajoutez</td><td class="non">Écrit, tests unitaires seulement</td></tr>
-    <tr><td>2 · Shell encadré</td><td>Toute commande, chacune approuvée par vous</td><td class="non">À venir</td></tr>
+    <tr><td>2 · Shell encadré</td><td>Toute commande, chacune affichée dans MLS Connect ouvert et approuvée par vous ; fichiers dans les dossiers ouverts</td><td class="ok">Approbation essayée sous Windows</td></tr>
     <tr><td>3 · Accès complet</td><td>Toute commande et tout fichier, sans approbation. Pour vos serveurs d'essai</td><td class="ok">Essayé</td></tr>
   </table>
 
@@ -51,6 +51,10 @@
     <tr><td>Niveau 3 : commande libre, lecture libre, délai expiré, aucun sudo sur le serveur</td><td class="ok">Réussi</td></tr>
     <tr><td>Clé d'hôte inconnue refusée ; profil fermé invisible</td><td class="ok">Réussi</td></tr>
     <tr><td>Journal <code>agent.log</code> : une ligne par demande, sans sortie de commande</td><td class="ok">Réussi</td></tr>
+    <tr><td>Niveau 2, fenêtre Windows : commande sur plusieurs lignes affichée telle quelle, focus sur Refuser, accord, refus, Échap, deux demandes à la suite</td><td class="ok">Réussi</td></tr>
+    <tr><td>Niveau 2 : mauvais jeton écarté sans affichage ; demande retirée si l'agent abandonne ; annonce retirée à la fermeture</td><td class="ok">Réussi</td></tr>
+    <tr><td>Niveau 2, vrai <code>mc-mcp</code> : refus si l'application est fermée, refus de l'utilisateur, accord puis connexion tentée, caractère de sens d'écriture refusé</td><td class="ok">Réussi</td></tr>
+    <tr><td>Niveau 2 : commande réellement exécutée sur un serveur après accord</td><td class="non">Non essayé</td></tr>
   </table>
   <p>Défaut trouvé et corrigé pendant les essais : un caractère nul dans une commande faisait couper toute la connexion par OpenSSH. Il est maintenant refusé avant l'envoi, à tous les niveaux.</p>
 
@@ -67,12 +71,13 @@ claude mcp add mls-connect -- "C:\…\EtafaBitvise\target\release\mc-mcp.exe"</p
   <ul>
     <li><strong>La vraie limite reste le compte sur le serveur.</strong> Un agent qui a aussi un terminal sur le poste peut contourner un filtre local. Pour les niveaux 0 et 1, utilisez un compte dédié sans sudo et une clé limitée par <code>restrict</code> et <code>from=</code>.</li>
     <li>Tout ce que l'agent lit part chez le fournisseur du modèle : n'ouvrez pas de dossiers contenant des secrets.</li>
+    <li>Au niveau 2, MLS Connect doit être ouvert sur le même poste : chaque commande s'y affiche en entier, et rien n'est mémorisé. Sans réponse en 2 minutes, elle est refusée.</li>
     <li>Au niveau 3, n'accordez pas à Claude Code d'autorisation permanente pour l'outil <code>executer</code> : il vous demandera alors votre accord à chaque commande.</li>
   </ul>
 
   <h2>Non fait</h2>
   <ul>
-    <li>Niveau 2 : il faut une approbation dans l'application ouverte.</li>
+    <li>Niveau 2 : exécution après accord non essayée sur un serveur réel (le serveur d'essai était un port fermé). Pas d'approbation sur Android.</li>
     <li>Niveau 1 non essayé contre un serveur réel avec <code>sudoers</code>.</li>
     <li><code>mc-mcp</code> n'est pas encore inclus dans les paquets d'installation.</li>
     <li>Essai depuis Windows vers un vrai serveur et depuis Claude Code lui-même.</li>

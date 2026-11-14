@@ -23,7 +23,8 @@ pub enum Niveau {
     Lecture,
     /// 1 : comme la lecture, avec les commandes ajoutées par l'utilisateur (redémarrer un service…).
     Exploitation,
-    /// 2 : toute commande, chacune approuvée par l'utilisateur. Pas encore disponible.
+    /// 2 : toute commande, chacune approuvée par l'utilisateur dans l'application ouverte
+    /// (`crate::approbation`). Fichiers : dossiers ouverts du profil, comme au niveau 0.
     Encadre,
     /// 3 : toute commande et tout fichier, sans approbation. Pour des serveurs d'essai.
     Complet,
@@ -114,6 +115,22 @@ pub const TAILLE_LECTURE_MAX: u64 = 256 * 1024;
 pub const DELAI_DEFAUT: Duration = Duration::from_secs(30);
 pub const DELAI_MAX: Duration = Duration::from_secs(600);
 
+/// Une commande soumise à l'utilisateur doit s'afficher telle qu'elle sera exécutée : ni caractère
+/// de contrôle (sauf saut de ligne et tabulation), ni caractère invisible ou de sens d'écriture.
+fn verifier_affichable(commande: &str) -> Result<(), String> {
+    let trompeur = |c: char| {
+        (c.is_control() && c != '\n' && c != '\t')
+            || matches!(c, '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2060}'..='\u{2069}' | '\u{FEFF}')
+    };
+    match commande.chars().find(|c| trompeur(*c)) {
+        Some(c) => Err(format!(
+            "Caractère « {} » refusé : la commande doit pouvoir être affichée telle quelle à l'utilisateur.",
+            c.escape_unicode()
+        )),
+        None => Ok(()),
+    }
+}
+
 fn mots(texte: &str) -> Vec<&str> {
     texte.split(' ').filter(|m| !m.is_empty()).collect()
 }
@@ -121,6 +138,11 @@ fn mots(texte: &str) -> Vec<&str> {
 impl AccesAgent {
     pub fn visible(&self) -> bool {
         self.niveau != Niveau::Aucun
+    }
+
+    /// La commande, une fois admise par `verifier_commande`, attend encore l'accord de l'utilisateur.
+    pub fn approbation_requise(&self) -> bool {
+        self.niveau == Niveau::Encadre
     }
 
     /// Commandes de départ admises, dans l'ordre : liste de consultation puis ajouts de l'utilisateur.
@@ -147,9 +169,8 @@ impl AccesAgent {
         }
         match self.niveau {
             Niveau::Aucun => return Err("Ce profil n'est pas ouvert aux agents.".into()),
-            Niveau::Encadre => {
-                return Err("Le niveau 2 (approbation de chaque commande) n'est pas encore disponible.".into())
-            }
+            // L'accord de l'utilisateur est demandé par l'appelant : voir `approbation_requise`.
+            Niveau::Encadre => return verifier_affichable(commande),
             Niveau::Complet => return Ok(()),
             Niveau::Lecture | Niveau::Exploitation => {}
         }
@@ -404,7 +425,21 @@ mod tests {
     fn niveaux_sans_filtre_ou_sans_acces() {
         assert_eq!(acces(Niveau::Complet).verifier_commande("rm -rf /tmp/x && echo $HOME"), Ok(()));
         assert!(acces(Niveau::Aucun).verifier_commande("uptime").is_err());
-        assert!(acces(Niveau::Encadre).verifier_commande("uptime").is_err());
+    }
+
+    #[test]
+    fn encadre_admet_tout_ce_qui_s_affiche() {
+        let a = acces(Niveau::Encadre);
+        assert!(a.approbation_requise());
+        assert!(!acces(Niveau::Complet).approbation_requise());
+        assert_eq!(a.verifier_commande("rm -rf /tmp/x && echo $HOME"), Ok(()));
+        assert_eq!(a.verifier_commande("for f in a b; do\n\techo $f\ndone"), Ok(()));
+        for c in ["echo ok\u{1b}[2K", "echo a\rb", "echo \u{202E}cod.exe", "ls\u{200B} /", "ls\0"] {
+            assert!(a.verifier_commande(c).is_err(), "{c:?} aurait dû être refusée");
+        }
+        // Les fichiers restent limités aux dossiers ouverts.
+        assert_eq!(a.verifier_chemin("/var/log/syslog"), Ok(()));
+        assert!(a.verifier_chemin("/etc/shadow").is_err());
     }
 
     #[test]

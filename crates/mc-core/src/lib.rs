@@ -2,6 +2,7 @@
 
 pub mod agent;
 pub mod appareil;
+pub mod approbation;
 pub mod cles;
 pub mod echange;
 pub mod connexion;
