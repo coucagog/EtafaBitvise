@@ -2,7 +2,7 @@
   import { open } from '@tauri-apps/plugin-dialog'
   import { CircleX, FolderOpen, Plug } from '@lucide/svelte'
   import { cles } from './cles.svelte'
-  import { app, type Methode, type Profil, type Section } from './etat.svelte'
+  import { app, type Methode, type NiveauAgent, type Profil, type Section } from './etat.svelte'
   import { touches } from './raccourcis'
 
   let { p }: { p: Profil } = $props()
@@ -35,6 +35,14 @@
   }
 
   const changer = () => app.marquerModifie()
+
+  const NIVEAUX: [NiveauAgent, string, string][] = [
+    ['aucun', 'Aucun', 'Profil invisible pour les agents.'],
+    ['lecture', '0 · Lecture', 'Commandes de consultation (état, services, journaux) et lecture des fichiers dans les dossiers ci-dessous.'],
+    ['exploitation', '1 · Exploitation', 'Comme la lecture, plus les commandes ajoutées ci-dessous, avec leurs arguments.'],
+    ['complet', '3 · Accès complet', "Toute commande, tout fichier, sans approbation. Réservé à vos serveurs d'essai : les droits du compte sur le serveur sont la seule limite."],
+  ]
+  const lignes = (texte: string) => texte.split('\n').map((l) => l.trim()).filter(Boolean)
 
   function entier(valeur: string, maximum: number): number {
     const n = Number(valeur)
@@ -185,6 +193,27 @@
         {/if}
         <button class="interrupteur" role="switch" aria-checked={p.keepalive} aria-label="Keep-alive" onclick={() => { p.keepalive = !p.keepalive; changer() }}></button>
       </div>
+      {#if !app.capacites.mobile}
+      <div class="titre-groupe espace">Accès d'un agent</div>
+      <div class="colonne agent">
+        <select class="champ limite" aria-label="Niveau d'accès d'un agent" bind:value={p.agent.niveau} onchange={changer}>
+          {#each NIVEAUX as [id, libelle]}<option value={id}>{libelle}</option>{/each}
+          <option value="encadre" disabled>2 · Shell encadré (à venir)</option>
+        </select>
+        <small class="aide" class:danger={p.agent.niveau === 'complet'}>{NIVEAUX.find(([id]) => id === p.agent.niveau)?.[2] ?? ''}</small>
+        {#if p.agent.niveau === 'lecture' || p.agent.niveau === 'exploitation'}
+          <label class="etiquette-agent" for="f-agent-dossiers">Dossiers lisibles, un par ligne</label>
+          <textarea id="f-agent-dossiers" class="champ mono" rows="3" placeholder="/var/log" value={p.agent.dossiers.join('\n')} oninput={(e) => { p.agent.dossiers = lignes(e.currentTarget.value); changer() }}></textarea>
+        {/if}
+        {#if p.agent.niveau === 'exploitation'}
+          <label class="etiquette-agent" for="f-agent-commandes">Commandes ajoutées, une par ligne</label>
+          <textarea id="f-agent-commandes" class="champ mono" rows="3" placeholder="systemctl restart nginx" value={p.agent.commandes.join('\n')} oninput={(e) => { p.agent.commandes = lignes(e.currentTarget.value); changer() }}></textarea>
+        {/if}
+        {#if p.agent.niveau !== 'aucun'}
+          <small class="aide">L'agent passe par le programme mc-mcp. La clé d'hôte doit avoir été enregistrée ici, et le secret mémorisé dans le trousseau. Chaque demande est consignée dans agent.log.</small>
+        {/if}
+      </div>
+      {/if}
     </div>
   {:else}
     <div class="pile">
@@ -239,6 +268,10 @@
   .route .rangee, .route select { width: 100%; max-width: 480px; }
   .espace { margin-top: 6px; }
   .memoriser { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+  .agent { padding: 4px 0 8px; }
+  .agent textarea { max-width: 480px; resize: vertical; }
+  .etiquette-agent { margin-top: 6px; font-size: 12px; color: var(--text-secondary); }
+  .aide.danger { color: var(--rec-500); }
   .aide { margin: 0; font-size: 11px; line-height: 1.45; color: var(--text-muted); }
   .option { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
   .option.bordee { border-bottom: 1px solid var(--border-subtle); }

@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::fichiers::ecrire_atomique;
+use crate::agent::AccesAgent;
 use crate::tunnels::Regle;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -57,6 +58,8 @@ pub struct Profil {
     pub rebond: String,
     /// Le secret saisi est conservé dans le trousseau du système.
     pub memoriser: bool,
+    /// Ce qu'un agent peut faire avec ce profil. Absent des anciens fichiers : aucun accès.
+    pub agent: AccesAgent,
 }
 
 impl Default for Profil {
@@ -79,6 +82,7 @@ impl Default for Profil {
             proxy: Proxy::default(),
             rebond: String::new(),
             memoriser: false,
+            agent: AccesAgent::default(),
         }
     }
 }

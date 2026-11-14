@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex as MutexSync, MutexGuard};
 use mc_core::{appareil, trousseau};
 use mc_core::connexion::{connecter_par as ouvrir, CodeErreur, AGENT_DISPONIBLE, Decision, Decisions, ErreurConnexion, Evenement, Rappel, Session};
 use mc_core::cles::{CodeCle, ErreurCle, GenreCle, InfoCle, MagasinCles};
+use mc_core::echange::{self, Apercu, BilanExport, BilanImport, CodeEchange, Doublon, ErreurEchange};
 use mc_core::hotes::{HoteConnu, MagasinHotes};
 use mc_core::profils::{ErreurProfils, MagasinProfils, Profil};
 use mc_core::ftp::{AccesFtp, Passerelle};
@@ -100,6 +101,96 @@ pub fn profils_charger(etat: State<'_, Arc<Etat>>) -> Result<ProfilsCharges, Err
 #[tauri::command]
 pub fn profils_enregistrer(etat: State<'_, Arc<Etat>>, profils: Vec<Profil>) -> Result<(), ErreurProfils> {
     etat.profils.enregistrer(&profils)
+}
+
+fn erreur_echange(message: String) -> ErreurEchange {
+    ErreurEchange { code: CodeEchange::Disque, message }
+}
+
+fn erreur_profils(e: ErreurProfils) -> ErreurEchange {
+    erreur_echange(format!("{} {}", e.message, e.detail.unwrap_or_default()).trim().to_string())
+}
+
+/// Texte d'un export, depuis un chemin ou un document de l'appareil.
+fn lire_export(app: &AppHandle, source: &str) -> Result<String, ErreurEchange> {
+    const TAILLE_MAX: u64 = 8 * 1024 * 1024;
+    let lire = |chemin: &Path| -> Result<String, ErreurEchange> {
+        if std::fs::metadata(chemin)?.len() > TAILLE_MAX {
+            return Err(ErreurEchange { code: CodeEchange::Format, message: "Ce fichier est trop grand pour un export de profils.".into() });
+        }
+        std::fs::read_to_string(chemin)
+            .map_err(|_| ErreurEchange { code: CodeEchange::Format, message: "Ce fichier n'est pas un export de profils lisible.".into() })
+    };
+    if !appareil::est_uri(source) {
+        return lire(Path::new(source));
+    }
+    avec_temporaire(app, "profils.mcprofils", erreur_echange, |temporaire| {
+        appareil::copier_vers(source, temporaire).map_err(erreur_echange)?;
+        lire(temporaire)
+    })
+}
+
+/// Exporte les profils choisis (et leurs rebonds). `phrase` : clés privées incluses, chiffrées.
+#[tauri::command]
+pub async fn profils_exporter(
+    app: AppHandle,
+    etat: State<'_, Arc<Etat>>,
+    ids: Vec<String>,
+    destination: String,
+    phrase: Option<String>,
+) -> Result<BilanExport, ErreurEchange> {
+    let etat = etat.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let profils = etat.profils.charger().map_err(erreur_profils)?;
+        let (texte, bilan) = echange::exporter(&profils, &ids, phrase.as_deref(), &etat.hotes)?;
+        if appareil::est_uri(&destination) {
+            avec_temporaire(&app, "profils.mcprofils", erreur_echange, |temporaire| {
+                std::fs::write(temporaire, &texte)?;
+                appareil::copier_depuis(temporaire, &destination).map_err(erreur_echange)
+            })?;
+        } else {
+            let chemin = Path::new(&destination);
+            if chemin.extension().and_then(|e| e.to_str()).map(str::to_ascii_lowercase).as_deref() != Some(echange::EXTENSION) {
+                return Err(ErreurEchange { code: CodeEchange::Format, message: "Choisissez un fichier .mcprofils.".into() });
+            }
+            std::fs::write(chemin, &texte)?;
+        }
+        Ok(bilan)
+    })
+    .await
+    .map_err(|e| erreur_echange(e.to_string()))?
+}
+
+#[tauri::command]
+pub async fn profils_apercu(app: AppHandle, etat: State<'_, Arc<Etat>>, source: String) -> Result<Apercu, ErreurEchange> {
+    let etat = etat.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let texte = lire_export(&app, &source)?;
+        echange::apercu(&texte, &etat.profils.charger().map_err(erreur_profils)?)
+    })
+    .await
+    .map_err(|e| erreur_echange(e.to_string()))?
+}
+
+/// Fusionne un export avec les profils locaux, puis enregistre la liste obtenue.
+#[tauri::command]
+pub async fn profils_importer(
+    app: AppHandle,
+    etat: State<'_, Arc<Etat>>,
+    source: String,
+    phrase: Option<String>,
+    doublon: Doublon,
+) -> Result<BilanImport, ErreurEchange> {
+    let etat = etat.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let texte = lire_export(&app, &source)?;
+        let locaux = etat.profils.charger().map_err(erreur_profils)?;
+        let (liste, bilan) = echange::importer(&texte, phrase.as_deref(), doublon, &locaux, &etat.cles, &etat.hotes)?;
+        etat.profils.enregistrer(&liste).map_err(erreur_profils)?;
+        Ok(bilan)
+    })
+    .await
+    .map_err(|e| erreur_echange(e.to_string()))?
 }
 
 /// Remet le drapeau à zéro quelle que soit l'issue, y compris si la commande est abandonnée.

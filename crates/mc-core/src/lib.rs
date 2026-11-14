@@ -1,7 +1,9 @@
 //! Cœur de MLS Connect : profils, clés d'hôte et connexion SSH, sans dépendance à Tauri.
 
+pub mod agent;
 pub mod appareil;
 pub mod cles;
+pub mod echange;
 pub mod connexion;
 mod fichiers;
 pub mod ftp;

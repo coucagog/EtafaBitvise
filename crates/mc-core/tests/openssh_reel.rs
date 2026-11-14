@@ -719,3 +719,86 @@ async fn passerelle_ftp_reelle() {
     sftp.supprimer(&base).await.unwrap();
     session.fermer().await;
 }
+
+#[tokio::test]
+#[ignore = "demande un serveur OpenSSH réel"]
+async fn commande_unique_et_lecture_reelles() {
+    let (session, _) = ouvrir("commande").await;
+    let r = session.executer("echo a; echo b >&2; printf '\\033[31mc\\033[0m'; exit 3", Duration::from_secs(10)).await.unwrap();
+    assert_eq!((r.code, r.sortie.as_str(), r.erreurs.as_str(), r.tronquee, r.expiree), (Some(3), "a\nc", "b\n", false, false));
+
+    let r = session.executer("sleep 5", Duration::from_secs(1)).await.unwrap();
+    assert!(r.expiree && r.code.is_none() && r.duree_ms < 3000, "{r:?}");
+
+    let r = session.executer("head -c 200000 /dev/zero | tr '\\0' x", Duration::from_secs(10)).await.unwrap();
+    assert!(r.tronquee && r.sortie.len() == mc_core::agent::TAILLE_SORTIE_MAX, "{}", r.sortie.len());
+    // Un caractère nul ferait couper toute la connexion par OpenSSH : refusé avant l'envoi.
+    assert!(session.executer("echo a\0b", Duration::from_secs(10)).await.is_err());
+    // La session reste utilisable après un délai expiré, une sortie tronquée et un refus.
+    assert_eq!(session.executer("echo encore", Duration::from_secs(10)).await.unwrap().sortie, "encore\n");
+
+    let sftp = session.ouvrir_sftp().await.unwrap();
+    assert_eq!(sftp.canonique("/etc/../etc/./hostname").await.unwrap(), "/etc/hostname");
+    // Les liens symboliques sont résolus : c'est sur cette forme que portent les règles de dossiers.
+    assert_eq!(sftp.canonique("/etc/os-release").await.unwrap(), "/usr/lib/os-release");
+    let e = sftp.lire_extrait("/etc/os-release", 0, 1 << 20).await.unwrap();
+    assert!(e.texte.contains("ID=") && !e.suite && e.taille as usize == e.texte.len(), "{e:?}");
+    let e = sftp.lire_extrait("/etc/os-release", 5, 10).await.unwrap();
+    assert!(e.texte.chars().count() <= 10 && e.suite && e.debut == 5, "{e:?}");
+    assert!(sftp.lire_extrait("/etc", 0, 10).await.is_err());
+    session.fermer().await;
+    println!("commande unique et lecture : ok");
+}
+
+/// Export depuis une machine A, import sur une machine B vierge, puis connexion réelle avec ce qui a été importé :
+/// clé privée sortie du coffre, profil de rebond suivi et rattaché, clé d'hôte reprise (toute clé inconnue est refusée sur B).
+#[tokio::test]
+#[ignore = "demande un serveur OpenSSH réel"]
+async fn export_puis_import_reels() {
+    use mc_core::cles::MagasinCles;
+    use mc_core::echange::{exporter, importer, Doublon};
+    let racine = std::env::temp_dir().join(format!("mc-reel-{}-echange", std::process::id()));
+    let _ = std::fs::remove_dir_all(&racine);
+    let (a, b) = (racine.join("a"), racine.join("b"));
+    std::fs::create_dir_all(&a).unwrap();
+    std::fs::create_dir_all(&b).unwrap();
+
+    // Machine A : la clé de l'essai, importée dans son magasin ; l'empreinte du serveur enregistrée par une connexion.
+    let cles_a = MagasinCles::new(a.join("keys"));
+    let cle = cles_a.importer(std::path::Path::new(&profil().chemin_cle), None).unwrap();
+    let hotes_a = Arc::new(MagasinHotes::new(a.join("known_hosts")));
+    let rebond = Profil { id: "r".into(), nom: "rebond".into(), chemin_cle: cle.chemin.clone(), ..profil() };
+    let cible = Profil { id: "c".into(), nom: "cible".into(), hote: "127.0.0.1".into(), port: 22, rebond: "r".into(), chemin_cle: cle.chemin.clone(), ..profil() };
+    for p in [&rebond, &cible] {
+        let decisions = Decisions::default();
+        let reponses = decisions.clone();
+        let rappel: Rappel = Arc::new(move |e| if let Evenement::CleInconnue { .. } = e { reponses.repondre(Decision::EnregistrerEtAccepter) });
+        connecter(p, None, hotes_a.clone(), decisions, rappel).await.map_err(|e| e.titre).unwrap().fermer().await;
+    }
+    let (texte, bilan) = exporter(&[rebond, cible], &["c".into()], Some("phrase de l'essai"), &hotes_a).unwrap();
+    assert_eq!((bilan.profils, bilan.cles_privees), (2, 1), "{bilan:?}");
+    assert!(!texte.contains("PRIVATE KEY") && !texte.contains(&*a.to_string_lossy()));
+
+    // Machine B.
+    let cles_b = MagasinCles::new(b.join("keys"));
+    let hotes_b = Arc::new(MagasinHotes::new(b.join("known_hosts")));
+    let (liste, bilan) = importer(&texte, Some("phrase de l'essai"), Doublon::Copier, &[], &cles_b, &hotes_b).unwrap();
+    assert!(bilan.cles_importees == 1 && bilan.cles_a_choisir.is_empty() && bilan.hotes_ajoutes >= 1, "{bilan:?}");
+    let cible = liste.iter().find(|p| p.nom == "cible").unwrap().clone();
+    let rebond = liste.iter().find(|p| p.id == cible.rebond).unwrap().clone();
+    assert_eq!((rebond.nom.as_str(), rebond.chemin_cle.as_str()), ("rebond", cible.chemin_cle.as_str()));
+    assert!(cible.chemin_cle.starts_with(&*b.to_string_lossy()));
+    let decisions = Decisions::default();
+    let reponses = decisions.clone();
+    let rappel: Rappel = Arc::new(move |e| if let Evenement::CleInconnue { .. } = e { reponses.repondre(Decision::Annuler) });
+    // Connexion directe : le compte de l'essai (agent-mc) interdit les redirections, donc le rebond par lui-même.
+    let session = connecter(&cible, None, hotes_b, decisions, rappel)
+        .await
+        .map_err(|e| format!("{} : {:?}", e.titre, e.detail))
+        .unwrap();
+    let r = session.executer("echo C=${SSH_CONNECTION%% *}", Duration::from_secs(10)).await.unwrap();
+    assert_eq!(r.sortie, "C=127.0.0.1\n");
+    session.fermer().await;
+    let _ = std::fs::remove_dir_all(&racine);
+    println!("export puis import réels : ok");
+}

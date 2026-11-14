@@ -155,3 +155,13 @@ Note d'installation : TypeScript reste en 5.9, la version 7 n'étant pas utilis�
 - Documents de l'appareil : sélecteur système du plugin dialog (URI `content://`), lus et écrits par `FichiersAndroid.kt`. Pas de permission de stockage demandée. Le nom fourni par le document est assaini (`appareil::nom_sur`), l'import n'écrase rien, et les échanges restent limités au dossier `fichiers` de l'application.
 - Import de clé : copie dans le cache privé le temps de la validation, puis effacement dans tous les cas.
 - Ces fichiers Kotlin et le manifeste sont dans `gen/android` : à conserver si ce dossier est régénéré.
+
+## Export et import de profils (2026-11-14)
+
+- Fichier `.mcprofils` : JSON versionné (`format: mls-connect-profils`, `version: 1`), lisible par l'application de bureau et par Android (sélecteur de documents, `content://`). Module `mc_core::echange`.
+- Contenu : profils choisis, plus leurs profils de rebond ; partie publique et empreinte de chaque clé ; lignes `known_hosts` de leurs serveurs. Le chemin local de la clé, la date de dernière connexion et l'accès d'un agent ne sont pas exportés : ils se règlent sur chaque machine.
+- Clés privées en option, dans un coffre : Argon2id (64 Mio, 3 passes) puis AES-256-GCM, avec données associées `mls-connect-profils/1`. Phrase de 8 caractères au moins. Une clé déjà protégée par sa propre passphrase la garde : le coffre l'enveloppe telle quelle. À l'import, des paramètres Argon2 démesurés sont refusés (512 Mio, 20 passes).
+- Jamais exportés : mots de passe et passphrases du trousseau. Le drapeau « mémoriser » suit : le secret est enregistré après la première connexion réussie sur la nouvelle machine.
+- Import : une clé déjà présente (même empreinte) est réutilisée ; sinon celle du coffre est importée, puis son empreinte vérifiée. Doublons d'identifiant : « Ajouter une copie » (nouvel identifiant, nom suivi de « (importé) », rebonds suivis) ou « Remplacer ». Une clé d'hôte différente de celle déjà enregistrée n'est jamais remplacée : elle est signalée.
+- Sans la phrase, l'import reste possible : profils et empreintes seuls, les clés à choisir sont listées.
+- Export et import sont bloqués tant que des profils ont des modifications non enregistrées : ils travaillent sur `profiles.json`.

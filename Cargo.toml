@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/mc-core", "app/src-tauri"]
+members = ["crates/mc-core", "crates/mc-mcp", "app/src-tauri"]
 exclude = ["poc"]
 
 [workspace.dependencies]

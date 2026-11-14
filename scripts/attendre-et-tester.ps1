@@ -69,12 +69,13 @@ if ($Compiler) {
 }
 
 if ($App) {
+    # Depuis le 2026-11-14, les executables de test ne peuvent plus ecrire dans %TEMP% sur ce poste : dossier temporaire dans target.
     # npm --ignore-scripts : aucun script d'installation de paquet n'est execute.
     $front = Join-Path $racine "app"
     $etapes = @(
         @{ Nom = "app-npm"; Log = "$journal\app-npm.log"; Cmd = "(cd /d $front && npm install --ignore-scripts --no-fund --no-audit)" },
         @{ Nom = "app-front"; Log = "$journal\app-front.log"; Cmd = "(cd /d $front && npm run check && npm run build)" },
-        @{ Nom = "app-core"; Log = "$journal\app-core-tests.log"; Cmd = "(cd /d $racine && cargo test -p mc-core)" },
+        @{ Nom = "app-core"; Log = "$journal\app-core-tests.log"; Cmd = "(cd /d $racine && (if not exist target\tmp-tests\ mkdir target\tmp-tests) && set TMP=$racine\target\tmp-tests&& set TEMP=$racine\target\tmp-tests&& cargo test -p mc-core -p mc-mcp && cargo build -p mc-mcp)" },
         @{ Nom = "app-tauri"; Log = "$journal\app-tauri-check.log"; Cmd = "(cd /d $racine && cargo check -p mc-connect --message-format short)" }
     )
 }

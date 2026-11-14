@@ -30,6 +30,14 @@ pub enum Verification {
     Modifiee(Vec<Empreinte>),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ajout {
+    Ajoutee,
+    Presente,
+    Differente,
+    Illisible,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HoteConnu {
@@ -147,6 +155,31 @@ impl MagasinHotes {
             .collect();
         hotes.sort_by(|a, b| (&a.hote, a.port).cmp(&(&b.hote, b.port)));
         Ok(hotes)
+    }
+
+    /// Lignes enregistrées pour cet hôte, au format OpenSSH.
+    pub fn lignes(&self, hote: &str, port: u16) -> io::Result<Vec<String>> {
+        let motif = Self::motif(hote, port);
+        Ok(self
+            .lire()?
+            .lines()
+            .filter(|l| lire_ligne(l).is_some_and(|(m, _)| m == motif))
+            .map(|l| l.trim().to_string())
+            .collect())
+    }
+
+    /// Ajoute une ligne venue d'ailleurs. Une clé différente de celle enregistrée n'est jamais remplacée.
+    pub fn ajouter_ligne(&self, ligne: &str) -> io::Result<Ajout> {
+        let Some((motif, cle)) = lire_ligne(ligne) else { return Ok(Ajout::Illisible) };
+        let (hote, port) = separer_motif(motif);
+        Ok(match self.verifier(&hote, port, &cle)? {
+            Verification::Connue => Ajout::Presente,
+            Verification::Modifiee(_) => Ajout::Differente,
+            Verification::Inconnue => {
+                self.enregistrer(&hote, port, &cle)?;
+                Ajout::Ajoutee
+            }
+        })
     }
 
     /// Ne retire que la clé désignée ; les autres lignes, même illisibles, sont conservées.

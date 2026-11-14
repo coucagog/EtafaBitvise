@@ -2922,6 +2922,8 @@ dependencies = [
 name = "mc-core"
 version = "0.1.0"
 dependencies = [
+ "aes-gcm",
+ "argon2",
  "futures",
  "jni",
  "keyring",
@@ -2930,6 +2932,16 @@ dependencies = [
  "rand 0.10.3",
  "russh",
  "russh-sftp",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "mc-mcp"
+version = "0.1.0"
+dependencies = [
+ "mc-core",
  "serde",
  "serde_json",
  "tokio",

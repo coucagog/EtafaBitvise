@@ -40,6 +40,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commandes::profils_charger,
             commandes::profils_enregistrer,
+            commandes::profils_exporter,
+            commandes::profils_apercu,
+            commandes::profils_importer,
             commandes::connecter,
             commandes::reconnecter,
             commandes::annuler_connexion,

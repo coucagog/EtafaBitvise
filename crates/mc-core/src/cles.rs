@@ -88,7 +88,11 @@ fn verifier_nom(nom: &str) -> Result<(), ErreurCle> {
 }
 
 fn nom_depuis_fichier(source: &Path) -> String {
-    let brut = source.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+    nom_propre(&source.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default())
+}
+
+/// Nom de clé valide tiré d'un nom quelconque.
+pub fn nom_propre(brut: &str) -> String {
     let propre: String = brut
         .chars()
         .map(|c| if c.is_ascii_alphanumeric() || matches!(c, '-' | '_') { c } else { '-' })
@@ -112,6 +116,15 @@ impl MagasinCles {
 
     fn chemin(&self, nom: &str) -> PathBuf {
         self.dossier.join(nom)
+    }
+
+    pub fn dossier(&self) -> &Path {
+        &self.dossier
+    }
+
+    /// Clé déjà présente, reconnue à son empreinte.
+    pub fn par_empreinte(&self, empreinte_cle: &str) -> Result<Option<InfoCle>, ErreurCle> {
+        Ok(self.lister()?.into_iter().find(|c| c.empreinte == empreinte_cle))
     }
 
     fn chemin_public(&self, nom: &str) -> PathBuf {
@@ -199,6 +212,15 @@ impl MagasinCles {
         }
         let texte = fs::read_to_string(source)
             .map_err(|_| ErreurCle::new(CodeCle::Format, "Ce fichier n'est pas une clé privée lisible."))?;
+        self.importer_contenu(&nom_depuis_fichier(source), &texte, phrase)
+    }
+
+    /// Comme `importer`, depuis le texte de la clé ; `base` donne le nom, rendu unique.
+    pub fn importer_contenu(&self, base: &str, texte: &str, phrase: Option<&str>) -> Result<InfoCle, ErreurCle> {
+        if texte.len() as u64 > TAILLE_CLE_MAX {
+            return Err(ErreurCle::new(CodeCle::Format, "Ce texte est trop grand pour être une clé privée."));
+        }
+        let texte = texte.to_string();
         let phrase = phrase.filter(|p| !p.is_empty());
         if phrase.is_none() && ppk_protegee(&texte) {
             return Err(ErreurCle::new(CodeCle::PhraseRequise, "Cette clé est protégée : saisissez sa passphrase."));
@@ -226,7 +248,7 @@ impl MagasinCles {
         if let Some(doublon) = existantes.iter().find(|c| c.empreinte == empreinte_cle) {
             return Err(ErreurCle::new(CodeCle::Existe, format!("Cette clé est déjà présente sous le nom « {} ».", doublon.nom)));
         }
-        let base = nom_depuis_fichier(source);
+        let base = nom_propre(base);
         let nom = (1..1000)
             .map(|i| if i == 1 { base.clone() } else { format!("{base}-{i}") })
             .find(|n| !self.chemin(n).exists())

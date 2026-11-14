@@ -12,5 +12,6 @@ notée dans `journal-dev/` avec sa raison.
 | [05-design-system.md](05-design-system.md) | Design system dérivé de YawREC |
 | [06-sources.md](06-sources.md) | Sources consultées |
 | [07-faisabilite-vnc.md](07-faisabilite-vnc.md) | Faisabilité VNC, étude sans prototype |
+| [08-acces-agent.md](08-acces-agent.md) | Accès d'un agent par MCP : niveaux 0 à 3, règles, prototype `mc-mcp` |
 
 Statuts utilisés : **Décidé**, **Proposé** (à valider), **À tester**.

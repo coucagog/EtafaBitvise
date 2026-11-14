@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ChevronDown, CircleX, Plus, Search, Server, Trash2 } from '@lucide/svelte'
+  import EchangeProfils from './EchangeProfils.svelte'
   import { app, type Profil } from './etat.svelte'
   import { touches } from './raccourcis'
 
@@ -35,6 +36,7 @@
       <Plus size={13} />Nouveau
     </button>
     <span class="espace"></span>
+    <EchangeProfils />
     <button class="btn-icone danger" aria-label="Supprimer le profil" title="Supprimer (Suppr)" disabled={!app.courant} onclick={() => (app.suppression = true)}>
       <Trash2 size={14} />
     </button>

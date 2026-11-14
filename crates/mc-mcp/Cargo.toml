@@ -1,0 +1,16 @@
+[package]
+name = "mc-mcp"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Serveur MCP de MLS Connect : un agent se connecte par les profils qui lui sont ouverts."
+
+[[bin]]
+name = "mc-mcp"
+path = "src/main.rs"
+
+[dependencies]
+mc-core = { path = "../mc-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["io-std"] }

@@ -7,6 +7,8 @@ export const NOM_APP = 'MLS Connect'
 
 export type Methode = 'mot-de-passe' | 'cle' | 'clavier' | 'agent'
 export type GenreProxy = 'aucun' | 'socks5' | 'http'
+export type NiveauAgent = 'aucun' | 'lecture' | 'exploitation' | 'encadre' | 'complet'
+export interface AccesAgent { niveau: NiveauAgent; commandes: string[]; dossiers: string[] }
 
 export interface Profil {
   id: string
@@ -26,6 +28,7 @@ export interface Profil {
   proxy: { genre: GenreProxy; hote: string; port: number }
   rebond: string
   memoriser: boolean
+  agent: AccesAgent
 }
 
 export interface Empreinte { algorithme: string; empreinte: string }
@@ -63,6 +66,7 @@ function profilVide(): Profil {
   return {
     id: crypto.randomUUID(), nom: 'nouveau-profil', groupe: '', hote: '', port: 22, utilisateur: '', methode: 'cle', cheminCle: '',
     delaiConnexion: 15, keepalive: true, intervalleKeepalive: 30, notes: '', derniereConnexion: null, tunnels: [], proxy: { genre: 'aucun', hote: '', port: 1080 }, rebond: '', memoriser: false,
+    agent: { niveau: 'aucun', commandes: [], dossiers: [] },
   }
 }
 
