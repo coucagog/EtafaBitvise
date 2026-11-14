@@ -1,6 +1,6 @@
 # Attend l'autorisation du garde-fou, puis verifie et execute le banc de faisabilite.
 # Chaque etape repasse par le garde-fou. Abandon apres -MaxHeures sans autorisation.
-param([int]$MaxHeures = 12, [int]$PauseSec = 60, [switch]$DiagCanaux, [switch]$Android, [switch]$Apk, [switch]$Gradle, [switch]$Compiler, [switch]$App, [switch]$Exe, [switch]$Reel, [switch]$ApkApp, [switch]$GradleApp, [string]$Filtre = "")
+param([int]$MaxHeures = 12, [int]$PauseSec = 60, [switch]$DiagCanaux, [switch]$Android, [switch]$Apk, [switch]$Gradle, [switch]$Compiler, [switch]$App, [switch]$Exe, [switch]$Paquet, [switch]$Reel, [switch]$ApkApp, [switch]$GradleApp, [string]$Filtre = "")
 
 $racine = Split-Path $PSScriptRoot -Parent
 $garde = Join-Path $PSScriptRoot "garde-ressources.ps1"
@@ -84,6 +84,15 @@ if ($Exe) {
     $front = Join-Path $racine "app"
     $etapes = @(
         @{ Nom = "app-exe"; Log = "$journal\app-exe.log"; Cmd = "(cd /d $front && cargo tauri build --debug --no-bundle)" }
+    )
+}
+
+if ($Paquet) {
+    # Installateur NSIS de debogage, avec mc-mcp a cote de l'application. Paquet final : memes commandes sans --debug.
+    $front = Join-Path $racine "app"
+    $etapes = @(
+        @{ Nom = "paquet-mc-mcp"; Log = "$journal\paquet-mc-mcp.log"; Cmd = "(cd /d $front && node scripts\sidecar.mjs --debug)" },
+        @{ Nom = "paquet-nsis"; Log = "$journal\paquet-nsis.log"; Cmd = "(cd /d $front && cargo tauri build --debug --bundles nsis --config src-tauri/tauri.paquets.conf.json)" }
     )
 }
 

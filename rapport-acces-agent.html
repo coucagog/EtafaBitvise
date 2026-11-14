@@ -62,7 +62,7 @@
   <ol>
     <li>Ouvrir une première fois la connexion dans MLS Connect, pour enregistrer la clé d'hôte. Mémoriser la passphrase dans le trousseau si la clé en a une.</li>
     <li>Dans le profil : Options, « Accès d'un agent », choisir le niveau.</li>
-    <li>Construire puis déclarer le serveur MCP :</li>
+    <li>Déclarer le serveur MCP. <code>mc-mcp</code> est installé à côté de l'application (Windows : <code>%LOCALAPPDATA%\MLS Connect\mc-mcp.exe</code> ; Linux : <code>/usr/bin/mc-mcp</code>). Depuis les sources :</li>
   </ol>
   <pre>cargo build -p mc-mcp --release
 claude mcp add mls-connect -- "C:\…\EtafaBitvise\target\release\mc-mcp.exe"</pre>
@@ -79,7 +79,7 @@ claude mcp add mls-connect -- "C:\…\EtafaBitvise\target\release\mc-mcp.exe"</p
   <ul>
     <li>Niveau 2 : exécution après accord non essayée sur un serveur réel (le serveur d'essai était un port fermé). Pas d'approbation sur Android.</li>
     <li>Niveau 1 non essayé contre un serveur réel avec <code>sudoers</code>.</li>
-    <li><code>mc-mcp</code> n'est pas encore inclus dans les paquets d'installation.</li>
+    <li><code>mc-mcp</code> est inclus dans l'installateur Windows (construit, non exécuté). Paquets Linux et macOS : à vérifier au prochain passage de la CI ; les paquets de <code>dist-linux</code> datent d'avant et ne le contiennent pas.</li>
     <li>Essai depuis Windows vers un vrai serveur et depuis Claude Code lui-même.</li>
   </ul>
   <p>Détails : <code>Doc-Ref/08-acces-agent.md</code>.</p>

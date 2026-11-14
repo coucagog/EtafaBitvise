@@ -119,6 +119,14 @@ sudo chown agent-mc: /home/agent-mc/.ssh/authorized_keys && sudo chmod 600 /home
    ```
    claude mcp add mls-connect -- "C:\chemin\vers\mc-mcp.exe"
    ```
+   `mc-mcp` est installé à côté de l'application :
+
+   | Système | Chemin |
+   |---|---|
+   | Windows (installateur) | `%LOCALAPPDATA%\MLS Connect\mc-mcp.exe` |
+   | Linux (`.deb`) | `/usr/bin/mc-mcp` |
+   | macOS | `/Applications/MLS Connect.app/Contents/MacOS/mc-mcp` |
+   | AppImage | dans l'image, non utilisable tel quel : prendre le `.deb`, ou construire `mc-mcp` à part |
 4. Vérifier : `mc-mcp --profils` affiche les profils ouverts.
 
 ## Essais du prototype (VM 102, 14 novembre 2026)
@@ -135,4 +143,14 @@ Compte `agent-mc` sans sudo, clé `restrict,from="127.0.0.1,::1"`, profils de ni
 - Niveau 2 : l'application doit être ouverte sur le même poste et sous le même compte que `mc-mcp`. Pas d'approbation sur Android.
 - Pas de session interactive (terminal) pour l'agent : commandes uniques seulement.
 - Aucun outil d'écriture de fichiers : au niveau 3, passer par une commande.
-- `mc-mcp` n'est pas encore livré dans les paquets : il se construit avec `cargo build -p mc-mcp --release`.
+- AppImage : `mc-mcp` est dans l'image, mais un client MCP ne peut pas l'y lancer directement.
+
+## Livraison de `mc-mcp` dans les paquets
+
+**Décidé** : `mc-mcp` est un exécutable annexe de Tauri (`bundle.externalBin`), copié à côté de l'application par chaque paquet.
+
+- La déclaration est dans un fichier à part, `app/src-tauri/tauri.paquets.conf.json`, passé seulement à l'empaquetage. Raison : Tauri exige la présence du fichier annexe dès la compilation ; dans la configuration principale, il casserait `cargo check`, les tests, Android et la construction sans paquet.
+- Préparation : `node scripts/sidecar.mjs` depuis `app` (construit `mc-mcp` en mode final et le copie dans `src-tauri/binaries/`, sous le nom du triplet de la cible ; `--debug` et `--target` existent). Dossier ignoré par git.
+- Empaquetage : `cargo tauri build --config src-tauri/tauri.paquets.conf.json`.
+- Garde-fou Windows : `scripts/attendre-et-tester.ps1 -Paquet` (installateur NSIS de débogage). CI : une étape par système (NSIS, `.deb`, `.app`).
+- Vérifié sous Windows le 14 novembre 2026 : installateur NSIS construit, `mc-mcp.exe` présent dans son script d'installation et de désinstallation. Installateur non exécuté. Linux et macOS : non vérifiés avant le prochain passage de la CI.

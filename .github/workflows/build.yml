@@ -52,3 +52,16 @@ jobs:
       - name: Construction
         working-directory: app
         run: cargo tauri build --debug --no-bundle
+
+      # mc-mcp est livré à côté de l'application : un seul format de paquet par système suffit à le vérifier.
+      - name: Paquet avec mc-mcp
+        working-directory: app
+        shell: bash
+        run: |
+          node scripts/sidecar.mjs --debug
+          case "$RUNNER_OS" in
+            Windows) format=nsis ;;
+            Linux) format=deb ;;
+            macOS) format=app ;;
+          esac
+          cargo tauri build --debug --bundles "$format" --config src-tauri/tauri.paquets.conf.json

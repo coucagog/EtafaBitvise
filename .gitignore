@@ -11,6 +11,9 @@ dist/
 dist-linux/
 *.log
 
+# mc-mcp préparé pour les paquets par app/scripts/sidecar.mjs
+app/src-tauri/binaries/
+
 # Générés par Tauri, sauf gen/android qui contient notre code Kotlin et notre manifeste
 app/src-tauri/gen/schemas/
 
