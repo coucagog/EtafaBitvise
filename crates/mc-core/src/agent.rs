@@ -199,6 +199,15 @@ impl AccesAgent {
             return Ok(());
         }
         if !COMMANDES_LECTURE.iter().any(|c| correspond(c)) {
+            // Même programme qu'une commande admise, mais autre forme : le dire, plutôt que de nommer le programme seul.
+            let premier = demandes.first().copied().unwrap_or_default();
+            let connu = COMMANDES_LECTURE.iter().copied().chain(ajouts.iter().map(String::as_str)).any(|m| mots(m).first() == Some(&premier));
+            if connu {
+                let courte: String = commande.chars().take(80).collect();
+                return Err(format!(
+                    "« {courte} » ne fait pas partie des commandes admises à ce niveau : « {premier} » n'y est admise que sous les formes données par l'outil « profils »."
+                ));
+            }
             return Err(format!(
                 "« {} » ne fait pas partie des commandes admises à ce niveau.",
                 demandes.first().copied().unwrap_or_default()
@@ -419,6 +428,17 @@ mod tests {
         assert!(a.verifier_commande("systemctl restart ssh").is_err());
         assert!(a.verifier_commande("systemctl restart nginx; reboot").is_err());
         assert!(acces(Niveau::Lecture).verifier_commande("systemctl restart nginx").is_err());
+    }
+
+    #[test]
+    fn refus_qui_nomme_la_forme() {
+        let a = acces(Niveau::Exploitation);
+        // Programme admis sous une autre forme : la commande entière est citée.
+        let r = a.verifier_commande("systemctl restart ssh").unwrap_err();
+        assert!(r.contains("« systemctl restart ssh »") && r.contains("que sous les formes"), "{r}");
+        // Programme inconnu : il est nommé seul.
+        let r = a.verifier_commande("rm -rf /tmp/x").unwrap_err();
+        assert!(r.starts_with("« rm » ne fait pas partie"), "{r}");
     }
 
     #[test]

@@ -161,7 +161,23 @@ Claude Code 2.1.325, `mc-mcp.exe` déclaré par `claude mcp add`, application Wi
 | Niveau 0, lire `/etc/passwd` | Refusée : hors des dossiers ouverts |
 | Niveau 2, `id -un && hostname` | Affichée dans la fenêtre, approuvée, exécutée, code 0 |
 
-`agent.log` : cinq lignes conformes, dont `"approuvee": true` pour la dernière. Tout a été retiré ensuite : déclaration MCP, profils, clé, `known_hosts`, `agent.log`, autorisation de la clé sur la VM, tunnel. L'approbation a été cliquée par le pilotage de la fenêtre, pas à la main.
+Second passage, quatre profils (niveaux 0 à 3), douze demandes, toutes conformes :
+
+| Demande | Résultat |
+|---|---|
+| Niveau 3, `ls /etc \| wc -l && echo $HOME` | Exécutée, code 0 : enchaînement et variable admis |
+| Niveau 3, lire `/etc/passwd` (300 octets) | Extrait rendu, suite annoncée |
+| Niveau 3, lister `/etc/ssh` | 12 entrées |
+| Niveau 3, `sleep 20` avec un délai de 3 s | Interrompue à 3 s, rendue comme erreur |
+| Niveau 3, `sudo -n id` | Exécutée, code 1 : le compte n'a pas de sudo |
+| Niveau 3, écrire, relire et supprimer un fichier de `/tmp` | Code 0 |
+| Niveau 1, commande ajoutée `touch /tmp/mc-essai-cc =` | Exécutée, code 0 |
+| Niveau 1, `touch /tmp/autre`, puis `rm …` | Refusées avant le serveur |
+| Niveau 2, `uname -sr` | Affichée, approuvée, exécutée |
+
+Défaut relevé par Claude Code lui-même et corrigé : pour `touch /tmp/autre`, le refus nommait « touch » alors que `touch` est admis sous une autre forme. Le message cite désormais la commande entière et renvoie à l'outil `profils`.
+
+`agent.log` : lignes conformes dans les deux passages, dont `"approuvee": true` pour les commandes de niveau 2. Tout a été retiré ensuite : déclaration MCP, profils, clé, `known_hosts`, `agent.log`, autorisation de la clé sur la VM, tunnel. L'approbation a été cliquée par le pilotage de la fenêtre, pas à la main.
 
 ## Limites du prototype
 

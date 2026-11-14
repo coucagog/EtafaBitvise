@@ -56,6 +56,7 @@
     <tr><td>Niveau 2, vrai <code>mc-mcp</code> : refus si l'application est fermée, refus de l'utilisateur, accord puis connexion tentée, caractère de sens d'écriture refusé</td><td class="ok">Réussi</td></tr>
     <tr><td>Niveau 2, VM 102, vraie application Linux : refus sans exécution, accord puis exécution constatée sur le serveur, commande sur plusieurs lignes, Échap</td><td class="ok">Réussi</td></tr>
     <tr><td>Depuis Claude Code sous Windows vers la VM 102 : profils, commande admise, commande et lecture refusées, dossier listé, commande de niveau 2 approuvée dans la fenêtre puis exécutée</td><td class="ok">Réussi</td></tr>
+    <tr><td>Depuis Claude Code, niveau 3 : enchaînement et variable, lecture de <code>/etc/passwd</code>, liste de <code>/etc/ssh</code>, délai expiré, écriture dans <code>/tmp</code>, aucun sudo ; niveau 1 : commande ajoutée admise, variantes refusées</td><td class="ok">Réussi</td></tr>
     <tr><td>Niveau 1, VM 102, <code>sudoers</code> limité à une commande : commande ajoutée exécutée ; autre service, enchaînement et argument de plus refusés (par le filtre ou par <code>sudoers</code>)</td><td class="ok">Réussi</td></tr>
   </table>
   <p>Défaut trouvé et corrigé pendant les essais : un caractère nul dans une commande faisait couper toute la connexion par OpenSSH. Il est maintenant refusé avant l'envoi, à tous les niveaux.</p>
