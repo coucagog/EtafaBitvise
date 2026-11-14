@@ -24,7 +24,7 @@
 <body>
 <main>
   <h1>MLS Connect : version Linux</h1>
-  <p class="sous">9 et 10 novembre 2026 · construite et essayée sur la VM 102, Debian 13, 4 cœurs, 2,4 Go de mémoire · écran virtuel Xvfb</p>
+  <p class="sous">9 et 10 novembre 2026, paquets refaits le 14 novembre avec <code>mc-mcp</code> · construite et essayée sur la VM 102, Debian 13, 4 cœurs, 2,4 Go de mémoire · écran virtuel Xvfb</p>
 
   <p class="bilan">L'application compile sous Linux et son cœur passe tous les tests. Les paquets <code>.deb</code> et AppImage sont produits et essayés : installation, lancement avec fenêtre complète et icône de barre, désinstallation.
   Elle n'a pas encore été utilisée sur un vrai bureau Linux : les essais d'interface se limitent au démarrage, sur un écran virtuel.</p>
@@ -54,9 +54,10 @@
   <h2>Paquets</h2>
   <table>
     <tr><th>Fichier, dans <code>dist-linux/</code></th><th>Taille</th><th>SHA-256</th></tr>
-    <tr><td><code>mls-connect_0.1.0_amd64.deb</code></td><td>6,3 Mo</td><td><code>fd256cd55f8e8e194334c330f4bdc73c1bf9571c7d3fab3d89acf89a6582da97</code></td></tr>
-    <tr><td><code>MLS-Connect_0.1.0_amd64.AppImage</code></td><td>107 Mo</td><td><code>5ec9ae84a16f9a0b49c0cc6db4a587f758d65d116c544396a00f0c13fb87ab9f</code></td></tr>
+    <tr><td><code>mls-connect_0.1.0_amd64.deb</code></td><td>9,2 Mo</td><td><code>bd23fc4d4537b21a5d13085a8a39757903b868c6821b8329f2dcc877cce83e6d</code></td></tr>
+    <tr><td><code>MLS-Connect_0.1.0_amd64.AppImage</code></td><td>109 Mo</td><td><code>9ce97d69b8bfddcdc0646013ff28fb16eebff7df0fd4a8818355f07b8ecda284</code></td></tr>
   </table>
+  <p>Paquets du 14 novembre 2026 (commit 6a26277) : ils contiennent <code>mc-mcp</code>, le serveur MCP de l'accès agent. Le <code>.deb</code> l'installe dans <code>/usr/bin/mc-mcp</code> (installé, lancé, puis retiré avec le paquet) ; l'AppImage le contient dans <code>usr/bin</code>, mais un client MCP ne peut pas l'y lancer directement. Les deux paquets ont été relancés sur l'écran virtuel : fenêtre de 1280 × 840 ouverte, icône de barre présente, application vivante après 40 s.</p>
   <p>Dépendances du <code>.deb</code> : libayatana-appindicator3-1, libwebkit2gtk-4.1-0, libgtk-3-0. Paquets non signés.</p>
 
   <h2>Non vérifié</h2>

@@ -51,8 +51,8 @@ Le niveau se règle dans le profil : Options, « Accès d'un agent ». Il est en
 |---|---|---|---|
 | Aucun | Rien : le profil lui est invisible | | Fait |
 | **0 · Lecture** | Commandes d'une liste fermée de consultation ; lister et lire dans les dossiers ouverts du profil | Compte dédié sans sudo ; clé `restrict` et `from=` | **Fait, essayé** |
-| 1 · Exploitation | Niveau 0, plus les commandes ajoutées par l'utilisateur, avec leurs arguments | Compte dédié ; `sudoers` limité à ces commandes exactes | Fait, non essayé sur un serveur réel |
-| **2 · Shell encadré** | Toute commande, chacune approuvée par l'utilisateur dans MLS Connect ouvert ; lister et lire dans les dossiers ouverts du profil | Compte dédié | **Fait** ; approbation essayée sous Windows, exécution après accord non essayée sur un serveur réel |
+| **1 · Exploitation** | Niveau 0, plus les commandes ajoutées par l'utilisateur, avec leurs arguments (entrée terminée par ` =` : sans argument de plus) | Compte dédié ; `sudoers` limité à ces commandes exactes | **Fait, essayé** contre un vrai `sudoers` |
+| **2 · Shell encadré** | Toute commande, chacune approuvée par l'utilisateur dans MLS Connect ouvert ; lister et lire dans les dossiers ouverts du profil | Compte dédié | **Fait, essayé** : fenêtre sous Windows, exécution réelle après accord sous Linux |
 | **3 · Accès complet** | Toute commande, tout fichier, sans approbation | Serveurs d'essai seulement ; les droits du compte sont la seule limite | **Fait, essayé** |
 
 ### Règles des niveaux 0 et 1
@@ -109,7 +109,9 @@ sudo chown agent-mc: /home/agent-mc/.ssh/authorized_keys && sudo chmod 600 /home
 # Pour lire les journaux système : sudo usermod -aG adm,systemd-journal agent-mc
 ```
 
-`restrict` coupe le terminal, les renvois de ports et d'agent, mais laisse les commandes et SFTP. Au niveau 1, ajouter un fichier `/etc/sudoers.d/agent-mc` limité aux commandes exactes, par exemple `agent-mc ALL=(root) NOPASSWD: /usr/bin/systemctl restart nginx`.
+`restrict` coupe le terminal, les renvois de ports et d'agent, mais laisse les commandes et SFTP. Au niveau 1, ajouter un fichier `/etc/sudoers.d/agent-mc` limité aux commandes exactes, par exemple `agent-mc ALL=(root) NOPASSWD: /usr/bin/systemctl restart nginx`. Dans le profil, la commande ajoutée s'écrit alors `sudo -n /usr/bin/systemctl restart nginx`.
+
+Une commande ajoutée admet des arguments de plus : `… restart nginx` laisse passer `… restart nginx ssh`. Deux parades, à cumuler : terminer l'entrée par ` =` dans le profil (aucun argument de plus), et écrire la commande entière dans `sudoers`, qui refuse alors toute variante (constaté à l'essai).
 
 ## Brancher Claude Code
 
@@ -138,6 +140,14 @@ Compte `agent-mc` sans sudo, clé `restrict,from="127.0.0.1,::1"`, profils de ni
 - Protocole MCP : 23 contrôles sur 23. Niveau 0 : consultation admise ; enchaînement, substitution, `cat`, `ls`, `systemctl restart` et `journalctl --vacuum-size` refusés ; lecture hors de `/var/log`, par `..` ou par un lien symbolique refusée. Niveau 3 : commande libre, lecture de `/etc/passwd`, délai expiré, pas de sudo. Clé d'hôte inconnue refusée, profil fermé invisible.
 - `agent.log` : une ligne par demande, sans aucune sortie de commande.
 
+## Essais des niveaux 1 et 2 (VM 102, 14 novembre 2026)
+
+Script `journal-dev/outils-essais/niveaux.sh` et client `niveaux-essai.mjs` : 20 contrôles sur 20. Le `sudoers`, le service d'essai et les données sont retirés à la fin.
+
+- **Niveau 1**, `sudoers` limité à `systemctl restart mc-essai.service` (service factice) : commande ajoutée exécutée par `sudo`, service passé d'inactif à actif ; autre service et enchaînement refusés avant le serveur ; argument de plus admis par le filtre local mais refusé par `sudoers` ; avec ` =`, refusé avant le serveur ; au niveau 3, `sudoers` refuse tout le reste.
+- **Niveau 2**, vraie application Linux sous Xvfb, touches envoyées par `xdotool` : Entrée sur le focus initial refuse, et la commande n'est pas exécutée (témoin absent sur le serveur) ; Tab puis Entrée approuve, la commande s'exécute (code 0, effet constaté) ; commande sur plusieurs lignes ; Échap refuse ; lecture hors des dossiers refusée et dossier ouvert listé sans demande ; `agent.log` conforme. Annonce du guichet en droits 600.
+- Limites de cet essai : la fenêtre s'affiche en noir sous Xvfb pour le build de débogage (aucune capture exploitable ; l'aspect de la boîte est vérifié sous Windows). Arrêtée par un signal, l'application laisse son annonce ; elle est remplacée au démarrage suivant, et entre-temps `mc-mcp` refuse.
+
 ## Limites du prototype
 
 - Niveau 2 : l'application doit être ouverte sur le même poste et sous le même compte que `mc-mcp`. Pas d'approbation sur Android.
@@ -153,4 +163,4 @@ Compte `agent-mc` sans sudo, clé `restrict,from="127.0.0.1,::1"`, profils de ni
 - Préparation : `node scripts/sidecar.mjs` depuis `app` (construit `mc-mcp` en mode final et le copie dans `src-tauri/binaries/`, sous le nom du triplet de la cible ; `--debug` et `--target` existent). Dossier ignoré par git.
 - Empaquetage : `cargo tauri build --config src-tauri/tauri.paquets.conf.json`.
 - Garde-fou Windows : `scripts/attendre-et-tester.ps1 -Paquet` (installateur NSIS de débogage). CI : une étape par système (NSIS, `.deb`, `.app`).
-- Vérifié sous Windows le 14 novembre 2026 : installateur NSIS construit, `mc-mcp.exe` présent dans son script d'installation et de désinstallation. Installateur non exécuté. Linux et macOS : non vérifiés avant le prochain passage de la CI.
+- Vérifié sous Windows le 14 novembre 2026 : installateur NSIS construit, `mc-mcp.exe` présent dans son script d'installation et de désinstallation. Installateur non exécuté. Linux, même jour, sur la VM 102 : `.deb` et AppImage construits en mode final, `mc-mcp` présent dans les deux, `/usr/bin/mc-mcp` installé, lancé, puis retiré avec le paquet. macOS : non vérifié avant le prochain passage de la CI.
