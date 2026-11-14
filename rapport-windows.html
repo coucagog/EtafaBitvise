@@ -69,6 +69,7 @@
     <tr><td><code>MLS-Connect_0.1.0_x64-setup.exe</code></td><td>4,2 Mo</td><td><code>373205708f50d5b856e070912b03731ebfec7796698a6e1940c8b4f70f6a7851</code></td></tr>
   </table>
   <p>Reconstruit le 14 novembre à 15 h depuis le commit 9608da3 ; l'installation décrite plus haut a été faite avec la construction précédente, celle-ci n'a pas été réexécutée.</p>
+  <p>Sur le poste de développement, l'installateur lancé depuis <code>livrables\windows\</code> échoue avec « NSIS Error : Error writing temporary file » : le dossier du projet est en intégrité faible et l'installateur en hérite. Il faut le copier hors du projet avant de le lancer ; la copie ne garde pas l'étiquette.</p>
   <p>Installation pour le compte courant, dans <code>%LOCALAPPDATA%\MLS Connect</code>, avec <code>mc-mcp.exe</code> à côté de l'application. Non signé : Windows affichera un avertissement SmartScreen. Pour le refaire : <code>scripts\attendre-et-tester.ps1 -Paquet -Final</code>, environ 45 minutes sur ce poste.</p>
 
   <h2>À savoir</h2>
