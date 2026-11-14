@@ -645,11 +645,14 @@ where
         MethodeAuth::Cle => {
             let phrase = secret.filter(|s| !s.is_empty());
             let cle = load_secret_key(&profil.chemin_cle, phrase.as_deref()).map_err(|e| {
-                let texte = if phrase.is_none() && matches!(e, russh::keys::Error::KeyIsEncrypted) {
-                    "Cette clé est protégée : saisissez sa passphrase.".to_string()
-                } else {
-                    format!("La clé {} n'a pas pu être chargée.", profil.chemin_cle)
-                };
+                // Le détail affiché est en français : le message de la bibliothèque (« The key is encrypted ») a été pris pour une panne.
+                if phrase.is_none() && matches!(e, russh::keys::Error::KeyIsEncrypted) {
+                    return erreur_cle(
+                        "Cette clé est protégée par une passphrase. Saisissez-la dans l'onglet Authentification, champ Passphrase, puis reconnectez-vous.".to_string(),
+                        "passphrase de la clé non fournie".to_string(),
+                    );
+                }
+                let texte = format!("La clé {} n'a pas pu être chargée.", profil.chemin_cle);
                 erreur_cle(texte, e.to_string())
             })?;
             let hachage = poignee.best_supported_rsa_hash().await.ok().flatten().flatten();
