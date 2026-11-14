@@ -65,3 +65,16 @@ jobs:
             macOS) format=app ;;
           esac
           cargo tauri build --debug --bundles "$format" --config src-tauri/tauri.paquets.conf.json
+
+      # Paquet macOS de débogage, pour un essai sur un vrai Mac. L'archive tar garde les droits d'exécution.
+      - name: Archive du paquet macOS
+        if: runner.os == 'macOS'
+        run: tar -czf MLS-Connect-macos-debug.tar.gz -C target/debug/bundle/macos "MLS Connect.app"
+
+      - name: Publication du paquet macOS
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mls-connect-macos-debug
+          path: MLS-Connect-macos-debug.tar.gz
+          retention-days: 7
