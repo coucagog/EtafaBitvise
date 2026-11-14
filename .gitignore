@@ -11,6 +11,7 @@ dist/
 dist-linux/
 dist-mac/
 dist-windows/
+livrables/
 *.log
 
 # mc-mcp préparé pour les paquets par app/scripts/sidecar.mjs

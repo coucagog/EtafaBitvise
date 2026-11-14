@@ -11,49 +11,73 @@
   h1 { font-size: 24px; margin: 0 0 4px; }
   h2 { font-size: 17px; margin: 32px 0 10px; }
   .sous { color: var(--attenue); margin: 0 0 24px; }
-  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--alerte); border-radius: 8px; }
+  .bilan { padding: 14px 16px; background: var(--carte); border: 1px solid var(--ligne); border-left: 3px solid var(--ok); border-radius: 8px; }
   table { width: 100%; border-collapse: collapse; }
   td, th { padding: 7px 10px; border-bottom: 1px solid var(--ligne); text-align: left; vertical-align: top; }
   th { color: var(--attenue); font-weight: 600; font-size: 13px; }
   .ok { color: var(--ok); white-space: nowrap; }
   .non { color: var(--alerte); white-space: nowrap; }
-  code { font: 13px Consolas, ui-monospace, monospace; }
+  code { font: 13px Consolas, ui-monospace, monospace; overflow-wrap: anywhere; }
   li { margin: 5px 0; }
 </style>
 </head>
 <body>
 <main>
   <h1>MLS Connect : version macOS</h1>
-  <p class="sous">11 novembre 2026 · préparée sans Mac · interface simulée dans la WebView de Windows</p>
+  <p class="sous">14 novembre 2026 · construite et lancée sur un iMac Pro Intel (Xeon W-2140B, 32 Go), macOS 15.7.3 · préparée le 11 novembre sans Mac</p>
 
-  <p class="bilan">La version macOS est préparée : configuration propre au Mac, adaptation de l'interface, trousseau Keychain.
-  <strong>Elle n'a jamais été compilée</strong> : il faut un Mac ou la CI GitHub, mise en attente. Le SDK d'Apple n'est licencié que sur matériel Apple, ce qui exclut une compilation croisée depuis Linux.</p>
+  <p class="bilan">L'application compile sous macOS, son cœur passe tous les tests, et le paquet <code>.dmg</code> final pour Mac Intel est produit, avec <code>mc-mcp</code>. Lancée depuis ce paquet, l'application démarre et reste ouverte.
+  Son interface n'a pas encore été regardée : je n'ai ni capture ni pilotage de la fenêtre sur le Mac. Aucun paquet final n'existe pour Apple Silicon.</p>
 
-  <h2>Préparé</h2>
+  <h2>Résultats</h2>
   <table>
-    <tr><th>Élément</th><th>État</th></tr>
-    <tr><td><code>tauri.macos.conf.json</code> : barre de titre native superposée, fenêtre opaque, paquets <code>.app</code> et <code>.dmg</code>, macOS 11 au minimum</td><td class="non">Écrit, non construit</td></tr>
-    <tr><td>Interface : classe <code>mac</code>, fond opaque, coins droits, nos boutons de fenêtre masqués, 78 px laissés aux boutons du système</td><td class="ok">Vérifié en simulation</td></tr>
-    <tr><td>Windows inchangé : nos boutons visibles, coins arrondis, fond transparent</td><td class="ok">Vérifié</td></tr>
-    <tr><td>Trousseau : Keychain par <code>keyring</code> (<code>apple-native</code>)</td><td class="non">Prévu dès l'origine, non compilé</td></tr>
-    <tr><td>Raccourcis : Ctrl conservé, Alt+C et Alt+V reconnus à la touche physique (Option+C produit « ç »)</td><td class="ok">Logique vérifiée</td></tr>
-    <tr><td>CI GitHub : tâche <code>macos-latest</code> déjà écrite dans <code>.github/workflows/build.yml</code></td><td class="non">Jamais exécutée</td></tr>
+    <tr><th>Vérification</th><th>Résultat</th></tr>
+    <tr><td>Interface : <code>svelte-check</code>, 0 erreur ; construction</td><td class="ok">Réussi</td></tr>
+    <tr><td>Tests du cœur sous macOS : 64, plus ceux de <code>mc-mcp</code></td><td class="ok">Réussi</td></tr>
+    <tr><td>Compilation finale de <code>mc-mcp</code> et de l'application (<code>x86_64</code>)</td><td class="ok">Réussi</td></tr>
+    <tr><td>Paquet <code>MLS Connect.app</code> : identifiant <code>app.mlsconnect.desktop</code>, version 0.1.0, macOS 11 au minimum, <code>mc-mcp</code> dans <code>Contents/MacOS</code></td><td class="ok">Réussi</td></tr>
+    <tr><td>Image disque <code>.dmg</code> : montée, contient l'application et le lien vers Applications</td><td class="ok">Réussi</td></tr>
+    <tr><td>Lancement depuis l'application sortie du <code>.dmg</code> : processus vivant, application enregistrée auprès du système, processus WebKit présents, aucun rapport de plantage</td><td class="ok">Réussi</td></tr>
+    <tr><td>Raccourcis globaux Ctrl+Shift+F7 et F8 enregistrés auprès du système (journal de l'application)</td><td class="ok">Réussi</td></tr>
+    <tr><td>Dossier de données créé dans <code>~/Library/Application Support</code> ; guichet d'approbation annoncé, droits 600</td><td class="ok">Réussi</td></tr>
+    <tr><td><code>mc-mcp</code> du paquet : répond</td><td class="ok">Réussi</td></tr>
+    <tr><td>CI GitHub, <code>macos-latest</code> (Apple Silicon) : compilation, tests et paquet <code>.app</code> de débogage</td><td class="ok">Réussi</td></tr>
+    <tr><td>Aspect de la fenêtre : boutons natifs face à notre barre, fond, coins</td><td class="non">Non vérifié</td></tr>
+    <tr><td>Icône de barre de menus et son menu</td><td class="non">Non vérifié</td></tr>
+    <tr><td>Effet des raccourcis globaux</td><td class="non">Non vérifié</td></tr>
+    <tr><td>Connexion SSH réelle, terminal, SFTP, tunnels depuis le Mac</td><td class="non">Non essayé</td></tr>
+    <tr><td>Keychain, agent SSH, sélecteurs de fichiers, copier-coller</td><td class="non">Non essayé</td></tr>
+    <tr><td>Paquet final pour Apple Silicon, ou universel</td><td class="non">Non construit</td></tr>
   </table>
 
-  <h2>Choix</h2>
+  <h2>Paquet</h2>
+  <table>
+    <tr><th>Fichier, dans <code>livrables/macos/</code></th><th>Taille</th><th>SHA-256</th></tr>
+    <tr><td><code>MLS-Connect_0.1.0_x64.dmg</code></td><td>6,9 Mo</td><td><code>1f45e1707058310376e2a4baee80922d96ec1c5a7e3b2d98b6d599a3df27bbf6</code></td></tr>
+  </table>
+  <p>Pour Mac Intel seulement. Non signé et non notarisé : après un téléchargement par navigateur, macOS refusera de l'ouvrir d'un double-clic ; passer par clic droit puis « Ouvrir ». <code>mc-mcp</code> se trouve dans <code>MLS Connect.app/Contents/MacOS/mc-mcp</code>.</p>
+
+  <h2>Comment il a été construit</h2>
+  <ul>
+    <li>Tout est dans <code>~/mc-mac</code> sur le Mac : sources, Rust, Node 22, <code>tauri-cli</code>. Supprimer ce dossier retire tout. Rien n'a été installé ailleurs ; les outils de ligne de commande d'Xcode étaient déjà présents.</li>
+    <li>Script <code>mac.sh</code> : vérification de l'interface, tests, <code>node scripts/sidecar.mjs</code>, puis <code>cargo tauri build --config src-tauri/tauri.paquets.conf.json</code>. Compilation finale : 2 minutes pour <code>mc-mcp</code>, 6 pour l'application.</li>
+    <li>Accès par SSH avec une clé créée pour cet essai, que vous avez autorisée vous-même sur le Mac.</li>
+  </ul>
+
+  <h2>Choix, inchangés</h2>
   <ul>
     <li>Pas de fenêtre transparente sur Mac : elle exigerait une API privée d'Apple, refusée sur le Mac App Store.</li>
     <li>Barre de titre superposée : les trois boutons natifs remplacent les nôtres, le reste de notre barre est conservé.</li>
-    <li>Distribution hors App Store sans alerte Gatekeeper : un certificat Developer ID et la notarisation seront nécessaires. Sans eux, ouvrir l'application par clic droit puis « Ouvrir ».</li>
+    <li>Distribution sans alerte Gatekeeper : il faudra un certificat Developer ID et la notarisation.</li>
   </ul>
 
-  <h2>À vérifier sur un Mac</h2>
+  <h2>À regarder sur le Mac</h2>
   <ul>
-    <li>Compilation, puis paquets <code>.app</code> et <code>.dmg</code>.</li>
-    <li>Position des boutons natifs face à notre barre de 32 px.</li>
-    <li>Icône de barre de menus (en couleur, pas en modèle monochrome).</li>
+    <li>Position des trois boutons natifs face à notre barre de 32 px ; fond opaque, coins.</li>
+    <li>Icône de barre de menus (en couleur) et son menu : afficher, se connecter, quitter.</li>
     <li>Raccourcis globaux Ctrl+Shift+F7 et F8 (touche Fn selon le clavier).</li>
-    <li>Keychain, agent SSH, sélecteurs de fichiers, copier-coller dans les champs.</li>
+    <li>Une connexion réelle : empreinte, terminal, SFTP, sélecteurs de fichiers, copier-coller.</li>
+    <li>Mémorisation d'un mot de passe ou d'une passphrase dans le Keychain.</li>
   </ul>
 </main>
 </body>
