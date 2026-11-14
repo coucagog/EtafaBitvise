@@ -69,7 +69,7 @@ if ($Compiler) {
 }
 
 if ($App) {
-    # Depuis le 2026-11-14, les executables de test ne peuvent plus ecrire dans %TEMP% sur ce poste : dossier temporaire dans target.
+    # Le dossier du projet porte une etiquette d'integrite faible : les executables de test tournent en integrite faible et n'ecrivent pas dans %TEMP%. Dossier temporaire dans target.
     # npm --ignore-scripts : aucun script d'installation de paquet n'est execute.
     $front = Join-Path $racine "app"
     $etapes = @(
